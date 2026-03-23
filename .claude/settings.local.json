@@ -39,7 +39,9 @@
       "Bash(git:*)",
       "Bash(unzip -o /tmp/applogs.zip -d /tmp/applogs)",
       "WebSearch",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:blast-motion.helpjuice.com)",
+      "WebFetch(domain:pgacoachonline.com)"
     ]
   }
 }

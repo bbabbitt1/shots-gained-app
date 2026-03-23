@@ -36,12 +36,11 @@ app.use(helmet({
   },
 }));
 
-// CORS — same-origin in production, explicit origins in dev
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [] // same-origin, no CORS needed
-  : (process.env.FRONTEND_URL || 'http://localhost:5173,http://192.168.1.59:5173').split(',');
+// CORS
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173,http://192.168.1.59:5173').split(',');
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: isProduction ? true : (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) callback(null, true);
     else callback(new Error('CORS blocked'));
   },
