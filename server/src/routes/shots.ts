@@ -49,7 +49,7 @@ router.post('/batch', authenticate, validate(batchShotsSchema), async (req: Auth
         table.rows.add(
           req.playerId, roundId, s.hole, s.par, s.holeResult || null,
           s.category, s.surfaceStart, s.distanceStart, s.surfaceEnd, s.distanceEnd,
-          s.clubUsed || null, s.shotShape || null, s.penalty ? 1 : 0, s.strokesGained,
+          s.clubUsed || null, s.shotShape || null, !!s.penalty, s.strokesGained,
           s.shotResult || null,
           s.shotDetails ? JSON.stringify(s.shotDetails) : null
         );
