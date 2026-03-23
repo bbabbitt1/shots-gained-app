@@ -36,7 +36,10 @@
       "Bash(MSYS_NO_PATHCONV=1 az ad sp create-for-rbac --name \"shots-gained-deploy\" --role contributor --scopes /subscriptions/f8a07224-b153-4367-bad9-77e2fa880afb/resourceGroups/Blast --sdk-auth 2>&1)",
       "Bash(node:*)",
       "Bash(printf '{\"\"\"\"email\"\"\"\":\"\"\"\"bbabbitt@greensidedata.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"Nugget1021!\"\"\"\"}')",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(unzip -o /tmp/applogs.zip -d /tmp/applogs)",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

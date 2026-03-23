@@ -19,6 +19,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust Azure reverse proxy
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet({
   contentSecurityPolicy: {
@@ -33,8 +36,10 @@ app.use(helmet({
   },
 }));
 
-// CORS — explicit origins (dev: localhost + LAN IP)
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173,http://192.168.1.59:5173').split(',');
+// CORS — same-origin in production, explicit origins in dev
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [] // same-origin, no CORS needed
+  : (process.env.FRONTEND_URL || 'http://localhost:5173,http://192.168.1.59:5173').split(',');
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) callback(null, true);
