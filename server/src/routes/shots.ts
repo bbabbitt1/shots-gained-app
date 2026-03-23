@@ -26,36 +26,29 @@ router.post('/batch', authenticate, validate(batchShotsSchema), async (req: Auth
     await transaction.begin();
 
     try {
-      const table = new mssql.Table('FactShots');
-      table.create = false;
-      table.columns.add('PlayerID', mssql.Int, { nullable: false });
-      table.columns.add('RoundID', mssql.Int, { nullable: false });
-      table.columns.add('Hole', mssql.Int, { nullable: false });
-      table.columns.add('Par', mssql.Int, { nullable: false });
-      table.columns.add('HoleResult', mssql.NVarChar(20), { nullable: true });
-      table.columns.add('Category', mssql.NVarChar(20), { nullable: false });
-      table.columns.add('SurfaceStart', mssql.NVarChar(20), { nullable: false });
-      table.columns.add('DistanceStart', mssql.Float, { nullable: false });
-      table.columns.add('SurfaceEnd', mssql.NVarChar(20), { nullable: false });
-      table.columns.add('DistanceEnd', mssql.Float, { nullable: false });
-      table.columns.add('ClubUsed', mssql.NVarChar(50), { nullable: true });
-      table.columns.add('ShotShape', mssql.NVarChar(50), { nullable: true });
-      table.columns.add('Penalty', mssql.Bit, { nullable: false });
-      table.columns.add('StrokesGained', mssql.Float, { nullable: false });
-      table.columns.add('ShotResult', mssql.NVarChar(20), { nullable: true });
-      table.columns.add('ShotDetails', mssql.NVarChar(mssql.MAX), { nullable: true });
-
       for (const s of shots) {
-        table.rows.add(
-          req.playerId, roundId, s.hole, s.par, s.holeResult || null,
-          s.category, s.surfaceStart, s.distanceStart, s.surfaceEnd, s.distanceEnd,
-          s.clubUsed || null, s.shotShape || null, !!s.penalty, s.strokesGained,
-          s.shotResult || null,
-          s.shotDetails ? JSON.stringify(s.shotDetails) : null
-        );
+        await new mssql.Request(transaction)
+          .input('playerId', req.playerId)
+          .input('roundId', roundId)
+          .input('hole', s.hole)
+          .input('par', s.par)
+          .input('holeResult', s.holeResult || null)
+          .input('category', s.category)
+          .input('surfaceStart', s.surfaceStart)
+          .input('distanceStart', s.distanceStart)
+          .input('surfaceEnd', s.surfaceEnd)
+          .input('distanceEnd', s.distanceEnd)
+          .input('clubUsed', s.clubUsed || null)
+          .input('shotShape', s.shotShape || null)
+          .input('penalty', s.penalty ? 1 : 0)
+          .input('strokesGained', s.strokesGained)
+          .input('shotResult', s.shotResult || null)
+          .input('shotDetails', s.shotDetails ? JSON.stringify(s.shotDetails) : null)
+          .query(`
+            INSERT INTO FactShots (PlayerID, RoundID, Hole, Par, HoleResult, Category, SurfaceStart, DistanceStart, SurfaceEnd, DistanceEnd, ClubUsed, ShotShape, Penalty, StrokesGained, ShotResult, ShotDetails)
+            VALUES (@playerId, @roundId, @hole, @par, @holeResult, @category, @surfaceStart, @distanceStart, @surfaceEnd, @distanceEnd, @clubUsed, @shotShape, @penalty, @strokesGained, @shotResult, @shotDetails)
+          `);
       }
-
-      await new mssql.Request(transaction).bulk(table);
 
       // Build and insert FactHoleScores rollup
       const holeMap = new Map<number, typeof shots>();
