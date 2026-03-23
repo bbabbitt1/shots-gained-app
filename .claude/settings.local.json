@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sqlite3:*)",
+      "Bash(python3:*)",
+      "Bash(python \"C:/Users/babbi/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"sports golf dark premium mobile dashboard tracking\" --design-system -p \"Shots Gained\")",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)",
+      "Bash(npx tsx:*)",
+      "Bash(curl:*)",
+      "Bash(\"C:/Users/babbi/development/shots-gained-app/server/.env\")",
+      "Bash(node -e \":*)",
+      "Bash(python3 -c \"import sys,json;d=json.load\\(sys.stdin\\);surfaces=set\\(r[''''surface''''] for r in d\\);print\\(''''Surfaces from API:'''',surfaces\\);bunker=[r for r in d if r[''''surface'''']==''''Bunker''''];print\\(''''Bunker count:'''',len\\(bunker\\)\\);print\\(''''Sample:'''',bunker[:3] if bunker else ''''NONE''''\\)\")",
+      "Bash(node -e \"let d='''''''';process.stdin.on\\(''''data'''',c=>d+=c\\);process.stdin.on\\(''''end'''',\\(\\)=>{const j=JSON.parse\\(d\\);const s=new Set\\(j.map\\(r=>r.surface\\)\\);console.log\\(''''Surfaces:'''',s\\);const b=j.filter\\(r=>r.surface===''''Bunker''''\\);console.log\\(''''Bunker count:'''',b.length\\);console.log\\(''''Sample:'''',b.slice\\(0,3\\)\\)}\\)\")",
+      "Bash(py --version)",
+      "Bash(where python:*)",
+      "Bash(where py:*)",
+      "Bash(npx tsx -e \":*)",
+      "Bash(netstat -ano)",
+      "Bash(xargs wc:*)",
+      "Bash(grep:*)",
+      "Bash(cmd.exe /c \"taskkill /F /PID 29080\")",
+      "Bash(az account:*)",
+      "Bash(az sql:*)",
+      "Bash(gh auth:*)"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+-- Per-hole scoring rollup for analytics
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'FactHoleScores')
+CREATE TABLE FactHoleScores (
+  HoleScoreID INT IDENTITY(1,1) PRIMARY KEY,
+  RoundID INT NOT NULL FOREIGN KEY REFERENCES DimRound(RoundID),
+  PlayerID INT NOT NULL FOREIGN KEY REFERENCES DimPlayer(PlayerID),
+  Hole INT NOT NULL,
+  Par INT NOT NULL,
+  Score INT NOT NULL,
+  ScoreToPar INT NOT NULL,
+  HoleResult NVARCHAR(20) NOT NULL,
+  FairwayResult NVARCHAR(20),
+  GreenInReg BIT NOT NULL DEFAULT 0,
+  Putts INT NOT NULL DEFAULT 0,
+  UpAndDown BIT,
+  SGTotal FLOAT NOT NULL DEFAULT 0,
+  SGDriving FLOAT NOT NULL DEFAULT 0,
+  SGApproach FLOAT NOT NULL DEFAULT 0,
+  SGShortGame FLOAT NOT NULL DEFAULT 0,
+  SGPutting FLOAT NOT NULL DEFAULT 0,
+  CONSTRAINT UQ_HoleScore UNIQUE (RoundID, Hole)
+);
