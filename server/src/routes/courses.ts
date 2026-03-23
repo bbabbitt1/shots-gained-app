@@ -25,42 +25,69 @@ router.get('/search', authenticate, async (req, res) => {
         WHERE ClubName LIKE @query OR CourseName LIKE @query
       `);
 
-    if (cached.recordset.length > 0) {
-      const courses = cached.recordset.map((c) => ({
-        id: c.CourseID,
-        club_name: c.ClubName,
-        course_name: c.CourseName,
-        api_source_id: c.APISourceID,
-        source: 'cache' as const,
-      }));
-      res.json({ source: 'cache', courses });
-      return;
-    }
+    const cachedCourses = cached.recordset.map((c) => ({
+      id: c.CourseID,
+      club_name: c.ClubName,
+      course_name: c.CourseName,
+      api_source_id: c.APISourceID,
+      source: 'cache' as const,
+    }));
 
-    // Hit external Golf Course API
-    const apiKey = process.env.GOLF_API_KEY;
-    const response = await fetch(`https://api.golfcourseapi.com/v1/search?search_query=${encodeURIComponent(query)}`, {
-      headers: { Authorization: `Key ${apiKey}` },
-    });
+    // Also hit external Golf Course API
+    let apiCourses: unknown[] = [];
+    try {
+      const apiKey = process.env.GOLF_API_KEY;
+      const response = await fetch(`https://api.golfcourseapi.com/v1/search?search_query=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Key ${apiKey}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        apiCourses = data.courses || [];
+      }
+    } catch {}
 
-    if (!response.ok) {
-      res.status(502).json({ error: 'Golf Course API error' });
-      return;
-    }
-
-    const data = await response.json();
-    res.json({ source: 'api', courses: data.courses || [] });
+    res.json({ source: 'mixed', cached: cachedCourses, courses: apiCourses });
   } catch (err) {
     console.error('Course search error:', err);
     res.status(500).json({ error: 'Search failed' });
   }
 });
 
-// Get course details (with holes) from external API
+// Get course details — check local cache first, then external API
 router.get('/details/:courseId', authenticate, async (req, res) => {
   try {
+    const courseId = req.params.courseId;
+    const source = req.query.source as string;
+
+    // If from cache, load from our DB
+    if (source === 'cache') {
+      const pool = await getPool();
+      const holes = await pool.request()
+        .input('courseId', parseInt(courseId))
+        .query('SELECT HoleNumber, Par, Yardage, Tee FROM DimCourseHoles WHERE CourseID = @courseId ORDER BY Tee, HoleNumber');
+
+      // Group holes by tee
+      const teeMap = new Map<string, { par: number; yardage: number }[]>();
+      for (const h of holes.recordset) {
+        const tee = h.Tee || 'Default';
+        if (!teeMap.has(tee)) teeMap.set(tee, []);
+        teeMap.get(tee)!.push({ par: h.Par, yardage: h.Yardage });
+      }
+
+      const tees = Array.from(teeMap.entries()).map(([teeName, holeList]) => ({
+        tee_name: teeName,
+        total_yards: holeList.reduce((s, h) => s + h.yardage, 0),
+        par_total: holeList.reduce((s, h) => s + h.par, 0),
+        holes: holeList,
+      }));
+
+      res.json({ course: { tees: { male: tees } } });
+      return;
+    }
+
+    // Otherwise hit external Golf Course API
     const apiKey = process.env.GOLF_API_KEY;
-    const response = await fetch(`https://api.golfcourseapi.com/v1/courses/${req.params.courseId}`, {
+    const response = await fetch(`https://api.golfcourseapi.com/v1/courses/${courseId}`, {
       headers: { Authorization: `Key ${apiKey}` },
     });
 
@@ -73,7 +100,7 @@ router.get('/details/:courseId', authenticate, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('Course details error:', err);
-    res.status(500).json({ error: 'Failed to get course details' });
+    res.status(500).json({ error: 'Failed to get course details', detail: err instanceof Error ? err.message : String(err) });
   }
 });
 

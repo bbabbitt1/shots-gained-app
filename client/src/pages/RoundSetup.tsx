@@ -6,6 +6,8 @@ interface CourseResult {
   id: string;
   club_name?: string;
   course_name?: string;
+  api_source_id?: string;
+  source?: 'cache' | 'api';
   location?: { city?: string; state?: string };
 }
 
@@ -20,6 +22,7 @@ const RoundSetup = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<CourseResult[]>([]);
+  const [cachedResults, setCachedResults] = useState<CourseResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -59,9 +62,11 @@ const RoundSetup = () => {
       try {
         const data = await searchCourses(searchQuery);
         const courses = data.courses || [];
+        const cached = data.cached || [];
+        setCachedResults(cached);
         setSearchResults(courses);
-        setShowDropdown(courses.length > 0);
-        if (courses.length === 0) setSearchError('No courses found');
+        setShowDropdown(courses.length > 0 || cached.length > 0);
+        if (courses.length === 0 && cached.length === 0) setSearchError('No courses found');
       } catch (err) {
         setSearchResults([]);
         setShowDropdown(false);
@@ -83,7 +88,8 @@ const RoundSetup = () => {
     setLoadingTees(true);
 
     try {
-      const details = await getCourseDetails(course.id);
+      const detailId = course.source === 'cache' ? course.id : (course.api_source_id || course.id);
+      const details = await getCourseDetails(String(detailId) + (course.source === 'cache' ? '?source=cache' : ''));
       const courseData = details.course || details;
       const teeOptions: TeeOption[] = [];
 
@@ -120,6 +126,8 @@ const RoundSetup = () => {
   const clearCourse = () => {
     setSelectedCourse(null);
     setSearchQuery('');
+    setSearchResults([]);
+    setCachedResults([]);
     setTees([]);
     setSelectedTee('');
     setCustomYardages(null);
@@ -136,7 +144,7 @@ const RoundSetup = () => {
       course: {
         clubName: selectedCourse?.club_name || searchQuery,
         courseName: selectedCourse?.course_name || '',
-        apiSourceId: selectedCourse?.id,
+        apiSourceId: selectedCourse?.api_source_id || selectedCourse?.id,
       },
       tee: customYardages ? 'Custom' : selectedTee,
       holes,
@@ -194,21 +202,41 @@ const RoundSetup = () => {
           )}
 
           {/* Search Results Dropdown */}
-          {showDropdown && searchResults.length > 0 && (
-            <div className="absolute z-20 mt-1 w-full bg-bg-surface border border-border rounded-lg max-h-64 overflow-y-auto shadow-lg shadow-black/30">
-              {searchResults.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => selectCourse(c)}
-                  className="w-full text-left px-4 py-3 hover:bg-accent/10 active:bg-accent/20 transition-colors border-b border-border/50 last:border-0"
-                >
-                  <div className="text-text-primary text-sm font-medium">{c.club_name}</div>
-                  <div className="text-text-muted text-xs">
-                    {c.course_name}
-                    {c.location && ` — ${c.location.city}, ${c.location.state}`}
-                  </div>
-                </button>
-              ))}
+          {showDropdown && (cachedResults.length > 0 || searchResults.length > 0) && (
+            <div className="absolute z-20 mt-1 w-full bg-bg-surface border border-border rounded-lg max-h-72 overflow-y-auto shadow-lg shadow-black/30">
+              {cachedResults.length > 0 && (
+                <>
+                  <div className="px-4 py-2 text-xs font-semibold text-accent uppercase tracking-wider bg-bg-card border-b border-border/50">Saved Courses</div>
+                  {cachedResults.map((c) => (
+                    <button
+                      key={`cache-${c.id}`}
+                      onClick={() => selectCourse(c)}
+                      className="w-full text-left px-4 py-3 hover:bg-accent/10 active:bg-accent/20 transition-colors border-b border-border/50"
+                    >
+                      <div className="text-text-primary text-sm font-medium">{c.club_name}</div>
+                      <div className="text-text-muted text-xs">{c.course_name}</div>
+                    </button>
+                  ))}
+                </>
+              )}
+              {searchResults.length > 0 && (
+                <>
+                  <div className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-bg-card border-b border-border/50">Search Results</div>
+                  {searchResults.map((c) => (
+                    <button
+                      key={`api-${c.id}`}
+                      onClick={() => selectCourse(c)}
+                      className="w-full text-left px-4 py-3 hover:bg-accent/10 active:bg-accent/20 transition-colors border-b border-border/50 last:border-0"
+                    >
+                      <div className="text-text-primary text-sm font-medium">{c.club_name}</div>
+                      <div className="text-text-muted text-xs">
+                        {c.course_name}
+                        {c.location && ` — ${c.location.city}, ${c.location.state}`}
+                      </div>
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
