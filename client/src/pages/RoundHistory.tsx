@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getRounds } from '../services/api';
-import { formatSG } from '@shared/sg-calculator';
 
 interface RoundRow {
   RoundID: number;
@@ -31,7 +30,7 @@ const RoundHistory = () => {
 
   return (
     <div className="min-h-dvh px-4 pt-6 pb-10 max-w-lg mx-auto space-y-4">
-      <button onClick={() => navigate('/home')} className="text-text-muted text-sm hover:text-text-primary transition-colors">
+      <button onClick={() => navigate('/home')} className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors">
         ← Dashboard
       </button>
       <div className="flex items-center justify-between">
@@ -51,7 +50,7 @@ const RoundHistory = () => {
           <p className="text-text-secondary">No rounds yet</p>
           <button
             onClick={() => navigate('/round/setup')}
-            className="text-accent hover:underline text-sm"
+            className="text-accent hover:underline text-sm py-2 min-h-[44px]"
           >
             Start your first round
           </button>

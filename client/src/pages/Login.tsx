@@ -73,7 +73,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition-colors"
+            className="w-full bg-accent hover:bg-accent-hover disabled:opacity-40 text-white font-semibold py-4 rounded-xl transition-colors text-lg"
           >
             {loading ? '...' : isRegister ? 'Create Account' : 'Login'}
           </button>
@@ -81,7 +81,7 @@ const Login = () => {
 
         <button
           onClick={() => { setIsRegister(!isRegister); setError(''); }}
-          className="w-full text-text-secondary text-sm mt-4 hover:text-text-primary transition-colors"
+          className="w-full text-text-secondary text-sm mt-4 py-3 min-h-[44px] hover:text-text-primary transition-colors"
         >
           {isRegister ? 'Already have an account? Login' : 'Need an account? Register'}
         </button>

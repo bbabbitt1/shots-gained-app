@@ -64,7 +64,7 @@ const PillSelect = ({ options, value, onChange }: { options: readonly string[]; 
         key={opt}
         type="button"
         onClick={() => onChange(value === opt ? undefined : opt)}
-        className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${
+        className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors min-h-[44px] ${
           value === opt
             ? 'border-accent bg-accent/15 text-accent'
             : 'border-border text-text-muted hover:border-text-muted'
@@ -92,7 +92,7 @@ const ShotDetailsPanel = ({ category, details, onChange }: ShotDetailsPanelProps
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-2 hover:bg-bg-card/50 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-3 min-h-[44px] hover:bg-bg-card/50 transition-colors"
       >
         <span className="text-text-secondary text-xs font-medium">
           Details
@@ -105,7 +105,7 @@ const ShotDetailsPanel = ({ category, details, onChange }: ShotDetailsPanelProps
         <div className="px-3 pb-3 space-y-3 border-t border-border/30">
           {fields.map((field) => (
             <div key={field.key} className="pt-2">
-              <label className="text-text-muted text-[10px] uppercase tracking-wider mb-1 block">
+              <label className="text-text-secondary text-xs uppercase tracking-wider mb-1 block">
                 {field.label}
               </label>
               <PillSelect

@@ -76,7 +76,7 @@ const RoundDetail = () => {
     return (
       <div className="min-h-dvh flex items-center justify-center flex-col gap-3">
         <p className="text-text-secondary">No data for this round</p>
-        <button onClick={() => navigate('/rounds')} className="text-accent hover:underline text-sm">Back to rounds</button>
+        <button onClick={() => navigate('/rounds')} className="text-accent hover:underline text-sm py-2 min-h-[44px]">Back to rounds</button>
       </div>
     );
   }
@@ -85,7 +85,7 @@ const RoundDetail = () => {
 
   return (
     <div className="min-h-dvh px-4 pt-6 pb-10 max-w-lg mx-auto space-y-4">
-      <button onClick={() => navigate('/rounds')} className="text-text-muted text-sm hover:text-text-primary transition-colors">
+      <button onClick={() => navigate('/rounds')} className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors">
         ← Rounds
       </button>
 
@@ -136,25 +136,25 @@ const RoundDetail = () => {
         <div className="text-text-secondary text-xs uppercase tracking-wider mb-3">Stats</div>
         <div className="grid grid-cols-4 gap-3">
           <div className="text-center">
-            <div className="text-text-muted text-[10px] uppercase">FIR</div>
+            <div className="text-text-secondary text-xs uppercase">FIR</div>
             <div className="text-text-primary font-semibold text-sm">
               {totals.firTotal > 0 ? `${totals.firHit}/${totals.firTotal}` : '—'}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-text-muted text-[10px] uppercase">GIR</div>
+            <div className="text-text-secondary text-xs uppercase">GIR</div>
             <div className="text-text-primary font-semibold text-sm">
               {`${totals.girHit}/${totals.girTotal}`}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-text-muted text-[10px] uppercase">↑/↓</div>
+            <div className="text-text-secondary text-xs uppercase">↑/↓</div>
             <div className="text-text-primary font-semibold text-sm">
               {totals.udTotal > 0 ? `${totals.udConv}/${totals.udTotal}` : '—'}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-text-muted text-[10px] uppercase">Putts</div>
+            <div className="text-text-secondary text-xs uppercase">Putts</div>
             <div className="text-text-primary font-semibold text-sm">{totals.putts}</div>
           </div>
         </div>
@@ -164,7 +164,7 @@ const RoundDetail = () => {
       <div className="bg-bg-card border border-border rounded-xl p-4">
         <div className="text-text-secondary text-xs uppercase tracking-wider mb-3">Hole by Hole</div>
         <div className="space-y-1">
-          <div className="grid grid-cols-[2rem_2rem_2rem_3rem_1fr] gap-2 text-[10px] text-text-muted uppercase tracking-wider pb-1 border-b border-border/50">
+          <div className="grid grid-cols-[2.5rem_2.5rem_2.5rem_3.5rem_1fr] gap-2 text-xs text-text-secondary uppercase tracking-wider pb-1 border-b border-border/50">
             <div>#</div>
             <div>Par</div>
             <div>Scr</div>
@@ -172,8 +172,8 @@ const RoundDetail = () => {
             <div>Result</div>
           </div>
           {holes.map((h) => (
-            <div key={h.Hole} className="grid grid-cols-[2rem_2rem_2rem_3rem_1fr] gap-2 text-sm py-1.5 border-b border-border/30 last:border-0">
-              <div className="text-text-muted">{h.Hole}</div>
+            <div key={h.Hole} className="grid grid-cols-[2.5rem_2.5rem_2.5rem_3.5rem_1fr] gap-2 text-sm py-1.5 border-b border-border/30 last:border-0">
+              <div className="text-text-secondary">{h.Hole}</div>
               <div className="text-text-secondary">{h.Par}</div>
               <div className={`font-semibold ${scoreColor(h.ScoreToPar)}`}>{h.Score}</div>
               <div className={`font-semibold ${sgColor(h.SGTotal)}`}>{formatSG(h.SGTotal)}</div>

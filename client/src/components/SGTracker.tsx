@@ -115,7 +115,7 @@ const SGTracker = ({ sgByCategory, totalSG, shots }: SGTrackerProps) => {
       <div className="grid grid-cols-4 gap-2">
         {categoryConfig.map(({ key, label }) => (
           <div key={key} className="bg-accent/10 rounded-lg p-2 text-center">
-            <div className="text-[10px] font-semibold text-accent uppercase tracking-wider">{label}</div>
+            <div className="text-xs font-semibold text-accent uppercase tracking-wider">{label}</div>
             <div className={`text-sm font-bold ${sgColor(sgByCategory[key])}`}>
               {formatSG(sgByCategory[key])}
             </div>
@@ -126,25 +126,25 @@ const SGTracker = ({ sgByCategory, totalSG, shots }: SGTrackerProps) => {
       {/* Round Stats */}
       <div className="grid grid-cols-4 gap-2 pt-1 border-t border-border/50">
         <div className="text-center">
-          <div className="text-[10px] text-text-muted uppercase tracking-wider">FIR</div>
+          <div className="text-xs text-text-secondary uppercase tracking-wider">FIR</div>
           <div className="text-sm font-semibold text-text-primary">
             {stats.fairways.total > 0 ? `${stats.fairways.hit}/${stats.fairways.total}` : '—'}
           </div>
         </div>
         <div className="text-center">
-          <div className="text-[10px] text-text-muted uppercase tracking-wider">GIR</div>
+          <div className="text-xs text-text-secondary uppercase tracking-wider">GIR</div>
           <div className="text-sm font-semibold text-text-primary">
             {stats.greens.total > 0 ? `${stats.greens.hit}/${stats.greens.total}` : '—'}
           </div>
         </div>
         <div className="text-center">
-          <div className="text-[10px] text-text-muted uppercase tracking-wider">↑/↓</div>
+          <div className="text-xs text-text-secondary uppercase tracking-wider">↑/↓</div>
           <div className="text-sm font-semibold text-text-primary">
             {stats.upAndDowns.total > 0 ? `${stats.upAndDowns.converted}/${stats.upAndDowns.total}` : '—'}
           </div>
         </div>
         <div className="text-center">
-          <div className="text-[10px] text-text-muted uppercase tracking-wider">Putts</div>
+          <div className="text-xs text-text-secondary uppercase tracking-wider">Putts</div>
           <div className="text-sm font-semibold text-text-primary">
             {stats.putts > 0 ? stats.putts : '—'}
           </div>

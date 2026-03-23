@@ -278,7 +278,7 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
         <button
           onClick={handleSubmit}
           disabled={!distanceStart || (!distanceEnd && surfaceEnd !== 'Hole')}
-          className="flex-1 bg-accent hover:bg-accent-hover disabled:opacity-40 text-white font-semibold py-3 rounded-lg transition-colors"
+          className="flex-1 bg-accent hover:bg-accent-hover disabled:opacity-40 text-white font-semibold py-4 rounded-xl transition-colors text-lg"
         >
           Add Shot
         </button>

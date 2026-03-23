@@ -360,7 +360,7 @@ const RoundSetup = () => {
         <button
           onClick={handleStart}
           disabled={!searchQuery || !holesPlayed}
-          className="w-full bg-accent hover:bg-accent-hover disabled:opacity-40 text-white font-semibold py-4 rounded-lg transition-colors text-lg mt-2"
+          className="w-full bg-accent hover:bg-accent-hover disabled:opacity-40 text-white font-semibold py-4 rounded-xl transition-colors text-lg mt-2"
         >
           Start Round
         </button>

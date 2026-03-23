@@ -146,7 +146,7 @@ const ShotEntry = () => {
         <div className="flex items-center justify-center gap-3">
           <span className={`text-2xl font-bold ${scoreColor}`}>{scoreDisplay}</span>
           {liveScore.holesCompleted > 0 && (
-            <span className="text-text-muted text-xs">
+            <span className="text-text-secondary text-xs">
               {liveScore.totalStrokes} strokes · {liveScore.holesCompleted} holes
             </span>
           )}
@@ -156,7 +156,7 @@ const ShotEntry = () => {
           <button
             onClick={handlePrevHole}
             disabled={round.state.currentHole <= 1}
-            className="text-text-secondary hover:text-text-primary disabled:opacity-30 px-3 py-1 text-lg font-bold"
+            className="text-text-secondary hover:text-text-primary disabled:opacity-30 px-3 py-2.5 min-h-[44px] text-lg font-bold"
           >
             &larr;
           </button>
@@ -170,7 +170,7 @@ const ShotEntry = () => {
           <button
             onClick={handleNextHole}
             disabled={round.state.currentHole >= round.state.holesPlayed}
-            className="text-text-secondary hover:text-text-primary disabled:opacity-30 px-3 py-1 text-lg font-bold"
+            className="text-text-secondary hover:text-text-primary disabled:opacity-30 px-3 py-2.5 min-h-[44px] text-lg font-bold"
           >
             &rarr;
           </button>
@@ -200,7 +200,7 @@ const ShotEntry = () => {
           ))}
           <button
             onClick={round.removeLastShot}
-            className="text-sg-negative text-xs mt-2 hover:underline"
+            className="text-sg-negative text-sm mt-2 py-2 min-h-[44px] hover:underline"
           >
             Undo last shot
           </button>
@@ -233,14 +233,14 @@ const ShotEntry = () => {
           {round.state.currentHole < round.state.holesPlayed ? (
             <button
               onClick={handleNextHole}
-              className="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-4 rounded-lg transition-colors text-lg"
+              className="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-4 rounded-xl transition-colors text-lg"
             >
               Next Hole →
             </button>
           ) : (
             <button
               onClick={handleFinish}
-              className="w-full bg-sg-positive hover:bg-sg-positive/90 text-bg-primary font-semibold py-4 rounded-lg transition-colors text-lg"
+              className="w-full bg-sg-positive hover:bg-sg-positive/90 text-bg-primary font-semibold py-4 rounded-xl transition-colors text-lg"
             >
               Finish Round
             </button>
@@ -263,7 +263,7 @@ const ShotEntry = () => {
       {round.state.shots.length > 0 && !(previousShot?.surfaceEnd === 'Hole' && round.state.currentHole >= round.state.holesPlayed) && (
         <button
           onClick={handleFinish}
-          className="w-full bg-sg-positive/20 text-sg-positive font-semibold py-3 rounded-lg hover:bg-sg-positive/30 transition-colors"
+          className="w-full bg-sg-positive/20 text-sg-positive font-semibold py-4 rounded-xl hover:bg-sg-positive/30 transition-colors"
         >
           Finish Round ({round.state.shots.length} shots)
         </button>

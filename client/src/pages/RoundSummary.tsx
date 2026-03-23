@@ -185,7 +185,7 @@ const RoundSummary = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-semibold py-4 rounded-lg transition-colors text-lg"
+            className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-semibold py-4 rounded-xl transition-colors text-lg"
           >
             {saving ? 'Saving...' : 'Save Round'}
           </button>
@@ -203,7 +203,7 @@ const RoundSummary = () => {
           </p>
           <button
             onClick={() => navigate('/home')}
-            className="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-4 rounded-lg transition-colors text-lg"
+            className="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-4 rounded-xl transition-colors text-lg"
           >
             Dashboard
           </button>
