@@ -138,8 +138,12 @@ router.post('/batch', authenticate, validate(batchShotsSchema), async (req: Auth
       await transaction.commit();
       res.json({ saved: shots.length, holes: holeMap.size });
     } catch (txErr) {
-      await transaction.rollback();
-      throw txErr;
+      try { await transaction.rollback(); } catch {}
+      const txMsg = txErr instanceof Error ? txErr.message : String(txErr);
+      const txStack = txErr instanceof Error ? txErr.stack : '';
+      console.error('Transaction error:', txMsg, txStack);
+      res.status(500).json({ error: 'Failed to save shots', detail: txMsg });
+      return;
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
