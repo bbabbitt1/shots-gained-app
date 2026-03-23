@@ -103,7 +103,7 @@ router.post('/cache', authenticate, validate(cacheCourseSchema), async (req, res
       courseId = result.recordset[0].CourseID;
     }
 
-    // Insert holes if provided
+    // Upsert holes if provided
     if (holes?.length) {
       for (const hole of holes) {
         await pool.request()
@@ -111,10 +111,13 @@ router.post('/cache', authenticate, validate(cacheCourseSchema), async (req, res
           .input('holeNum', hole.holeNumber)
           .input('par', hole.par)
           .input('yardage', hole.yardage)
-          .input('tee', hole.tee)
+          .input('tee', hole.tee || 'Default')
           .query(`
-            INSERT INTO DimCourseHoles (CourseID, HoleNumber, Par, Yardage, Tee)
-            VALUES (@courseId, @holeNum, @par, @yardage, @tee)
+            MERGE DimCourseHoles AS target
+            USING (SELECT @courseId AS CourseID, @holeNum AS HoleNumber, @tee AS Tee) AS source
+            ON target.CourseID = source.CourseID AND target.HoleNumber = source.HoleNumber AND target.Tee = source.Tee
+            WHEN MATCHED THEN UPDATE SET Par = @par, Yardage = @yardage
+            WHEN NOT MATCHED THEN INSERT (CourseID, HoleNumber, Par, Yardage, Tee) VALUES (@courseId, @holeNum, @par, @yardage, @tee);
           `);
       }
     }
