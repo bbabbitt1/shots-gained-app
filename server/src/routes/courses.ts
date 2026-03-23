@@ -26,7 +26,14 @@ router.get('/search', authenticate, async (req, res) => {
       `);
 
     if (cached.recordset.length > 0) {
-      res.json({ source: 'cache', courses: cached.recordset });
+      const courses = cached.recordset.map((c) => ({
+        id: c.CourseID,
+        club_name: c.ClubName,
+        course_name: c.CourseName,
+        api_source_id: c.APISourceID,
+        source: 'cache' as const,
+      }));
+      res.json({ source: 'cache', courses });
       return;
     }
 
