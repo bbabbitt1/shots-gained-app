@@ -42,7 +42,9 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:blast-motion.helpjuice.com)",
       "WebFetch(domain:pgacoachonline.com)",
-      "Bash(printf '{\"\"\"\"clubName\"\"\"\":\"\"\"\"Test Club\"\"\"\",\"\"\"\"courseName\"\"\"\":\"\"\"\"Test Course\"\"\"\",\"\"\"\"apiSourceId\"\"\"\":\"\"\"\"123\"\"\"\",\"\"\"\"holes\"\"\"\":[{\"\"\"\"holeNumber\"\"\"\":1,\"\"\"\"par\"\"\"\":4,\"\"\"\"yardage\"\"\"\":400,\"\"\"\"tee\"\"\"\":\"\"\"\"Blue\"\"\"\"}]}')"
+      "Bash(printf '{\"\"\"\"clubName\"\"\"\":\"\"\"\"Test Club\"\"\"\",\"\"\"\"courseName\"\"\"\":\"\"\"\"Test Course\"\"\"\",\"\"\"\"apiSourceId\"\"\"\":\"\"\"\"123\"\"\"\",\"\"\"\"holes\"\"\"\":[{\"\"\"\"holeNumber\"\"\"\":1,\"\"\"\"par\"\"\"\":4,\"\"\"\"yardage\"\"\"\":400,\"\"\"\"tee\"\"\"\":\"\"\"\"Blue\"\"\"\"}]}')",
+      "Bash(unzip -o /tmp/applogs2.zip -d /tmp/applogs2)",
+      "Bash(find /tmp/applogs2 -name \"*docker*\" -exec tail -30 {})"
     ]
   }
 }

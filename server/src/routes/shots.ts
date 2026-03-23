@@ -142,8 +142,9 @@ router.post('/batch', authenticate, validate(batchShotsSchema), async (req: Auth
       throw txErr;
     }
   } catch (err) {
-    console.error('Save shots error:', err);
-    res.status(500).json({ error: 'Failed to save shots' });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Save shots error:', msg, err);
+    res.status(500).json({ error: 'Failed to save shots', detail: msg });
   }
 });
 
