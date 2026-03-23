@@ -4,6 +4,29 @@ import { SURFACES, END_SURFACES, CATEGORIES, CLUBS } from '@shared/types';
 import { calculateStrokesGained, inferCategory, formatSG, getShotResultContext, autoShotResult } from '@shared/sg-calculator';
 import ShotDetailsPanel from './ShotDetailsPanel';
 
+const suggestClub = (distance: number, category: Category): string => {
+  if (category === 'Short Game') {
+    if (distance <= 10) return '58°';
+    if (distance <= 30) return '56°';
+    if (distance <= 50) return '52°';
+    return 'PW';
+  }
+  // Approach
+  if (distance >= 230) return '3 Wood';
+  if (distance >= 210) return '3 Hybrid';
+  if (distance >= 195) return '4 Hybrid';
+  if (distance >= 185) return '5 Iron';
+  if (distance >= 175) return '6 Iron';
+  if (distance >= 165) return '7 Iron';
+  if (distance >= 155) return '8 Iron';
+  if (distance >= 145) return '9 Iron';
+  if (distance >= 130) return 'PW';
+  if (distance >= 115) return '50°';
+  if (distance >= 100) return '52°';
+  if (distance >= 85) return '56°';
+  return '58°';
+};
+
 interface ShotFormProps {
   hole: number;
   par: number;
@@ -38,6 +61,12 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
     const newCategory = inferCategory(surfaceStart, par, shotNumber, distanceStart);
     setCategory(newCategory);
     if (newCategory === 'Putting') setClubUsed('Putter');
+    else if (newCategory === 'Driving') setClubUsed('Driver');
+    else setClubUsed(suggestClub(distanceStart, newCategory));
+    // Default putting end surface
+    if (newCategory === 'Putting') {
+      setSurfaceEnd(distanceStart <= 8 ? 'Hole' : 'Green');
+    }
   }, [surfaceStart, par, shotNumber, distanceStart]);
 
   // Auto-determine shot result when end surface changes

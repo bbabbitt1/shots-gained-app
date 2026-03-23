@@ -18,6 +18,7 @@ interface FieldConfig {
   key: string;
   label: string;
   options: readonly string[];
+  multi?: boolean;
 }
 
 const getFieldsForCategory = (category: Category): FieldConfig[] => {
@@ -26,16 +27,15 @@ const getFieldsForCategory = (category: Category): FieldConfig[] => {
       return [
         { key: 'intendedShape', label: 'Shot Shape', options: INTENDED_SHAPES },
         { key: 'fairwayWidth', label: 'Fairway', options: FAIRWAY_WIDTHS },
-        { key: 'windDirection', label: 'Wind Dir', options: WIND_DIRECTIONS },
+        { key: 'windDirection', label: 'Wind Dir', options: WIND_DIRECTIONS, multi: true },
         { key: 'windStrength', label: 'Wind', options: WIND_STRENGTHS },
-        { key: 'lieQuality', label: 'Lie', options: LIE_QUALITIES },
       ];
     case 'Approach':
       return [
         { key: 'pinDepth', label: 'Pin Depth', options: PIN_DEPTHS },
         { key: 'pinSide', label: 'Pin Side', options: PIN_SIDES },
         { key: 'greenFirmness', label: 'Firmness', options: GREEN_FIRMNESS },
-        { key: 'windDirection', label: 'Wind Dir', options: WIND_DIRECTIONS },
+        { key: 'windDirection', label: 'Wind Dir', options: WIND_DIRECTIONS, multi: true },
         { key: 'windStrength', label: 'Wind', options: WIND_STRENGTHS },
         { key: 'lieQuality', label: 'Lie', options: LIE_QUALITIES },
       ];
@@ -43,8 +43,6 @@ const getFieldsForCategory = (category: Category): FieldConfig[] => {
       return [
         { key: 'shotType', label: 'Shot Type', options: SHORT_GAME_TYPES },
         { key: 'lieQuality', label: 'Lie', options: LIE_QUALITIES },
-        { key: 'windDirection', label: 'Wind Dir', options: WIND_DIRECTIONS },
-        { key: 'windStrength', label: 'Wind', options: WIND_STRENGTHS },
       ];
     case 'Putting':
       return [
@@ -76,14 +74,47 @@ const PillSelect = ({ options, value, onChange }: { options: readonly string[]; 
   </div>
 );
 
+const PillMultiSelect = ({ options, value, onChange }: { options: readonly string[]; value?: string[]; onChange: (v: string[] | undefined) => void }) => {
+  const selected = value || [];
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((opt) => {
+        const isSelected = selected.includes(opt);
+        return (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => {
+              const next = isSelected
+                ? selected.filter((s) => s !== opt)
+                : [...selected, opt];
+              onChange(next.length > 0 ? next : undefined);
+            }}
+            className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors min-h-[44px] ${
+              isSelected
+                ? 'border-accent bg-accent/15 text-accent'
+                : 'border-border text-text-muted hover:border-text-muted'
+            }`}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
 const ShotDetailsPanel = ({ category, details, onChange }: ShotDetailsPanelProps) => {
   const [expanded, setExpanded] = useState(false);
   const fields = getFieldsForCategory(category);
 
   // Count filled fields
-  const filled = fields.filter((f) => (details as Record<string, unknown>)[f.key]).length;
+  const filled = fields.filter((f) => {
+    const val = (details as Record<string, unknown>)[f.key];
+    return f.multi ? Array.isArray(val) && val.length > 0 : !!val;
+  }).length;
 
-  const handleFieldChange = (key: string, value: string | undefined) => {
+  const handleFieldChange = (key: string, value: string | string[] | undefined) => {
     onChange({ ...details, [key]: value });
   };
 
@@ -108,11 +139,19 @@ const ShotDetailsPanel = ({ category, details, onChange }: ShotDetailsPanelProps
               <label className="text-text-secondary text-xs uppercase tracking-wider mb-1 block">
                 {field.label}
               </label>
-              <PillSelect
-                options={field.options}
-                value={(details as Record<string, string | undefined>)[field.key]}
-                onChange={(v) => handleFieldChange(field.key, v)}
-              />
+              {field.multi ? (
+                <PillMultiSelect
+                  options={field.options}
+                  value={(details as Record<string, string[] | undefined>)[field.key]}
+                  onChange={(v) => handleFieldChange(field.key, v)}
+                />
+              ) : (
+                <PillSelect
+                  options={field.options}
+                  value={(details as Record<string, string | undefined>)[field.key]}
+                  onChange={(v) => handleFieldChange(field.key, v)}
+                />
+              )}
             </div>
           ))}
         </div>

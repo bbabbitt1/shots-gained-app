@@ -45,7 +45,7 @@ export const SHORT_GAME_TYPES = ['chip', 'pitch', 'flop', 'bump-and-run', 'bunke
 export const BREAK_TYPES = ['straight', 'left-to-right', 'right-to-left', 'double-break'] as const;
 export const BREAK_SEVERITIES = ['flat', 'slight', 'moderate', 'severe'] as const;
 export const PUTT_SLOPES = ['uphill', 'downhill', 'level'] as const;
-export const PUTT_MISSES = ['high', 'low', 'short', 'long', 'lip-out', 'made'] as const;
+export const PUTT_MISSES = ['high', 'low', 'short', 'long', 'lip-out', 'mis-read', 'made'] as const;
 export const GREEN_SPEEDS = ['slow', 'medium', 'fast'] as const;
 
 // Composite detail types
