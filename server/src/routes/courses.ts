@@ -56,7 +56,7 @@ router.get('/search', authenticate, async (req, res) => {
 // Get course details — check local cache first, then external API
 router.get('/details/:courseId', authenticate, async (req, res) => {
   try {
-    const courseId = req.params.courseId;
+    const courseId = req.params.courseId as string;
     const source = req.query.source as string;
 
     // If from cache, load from our DB
