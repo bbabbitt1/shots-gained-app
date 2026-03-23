@@ -41,7 +41,8 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:blast-motion.helpjuice.com)",
-      "WebFetch(domain:pgacoachonline.com)"
+      "WebFetch(domain:pgacoachonline.com)",
+      "Bash(printf '{\"\"\"\"clubName\"\"\"\":\"\"\"\"Test Club\"\"\"\",\"\"\"\"courseName\"\"\"\":\"\"\"\"Test Course\"\"\"\",\"\"\"\"apiSourceId\"\"\"\":\"\"\"\"123\"\"\"\",\"\"\"\"holes\"\"\"\":[{\"\"\"\"holeNumber\"\"\"\":1,\"\"\"\"par\"\"\"\":4,\"\"\"\"yardage\"\"\"\":400,\"\"\"\"tee\"\"\"\":\"\"\"\"Blue\"\"\"\"}]}')"
     ]
   }
 }

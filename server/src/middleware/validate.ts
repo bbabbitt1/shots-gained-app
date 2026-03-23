@@ -67,6 +67,6 @@ const holeSchema = z.object({
 export const cacheCourseSchema = z.object({
   clubName: z.string().min(1).max(200).trim(),
   courseName: z.string().max(200).trim(),
-  apiSourceId: z.string().max(100).optional(),
+  apiSourceId: z.union([z.string(), z.number()]).transform(String).optional(),
   holes: z.array(holeSchema).optional(),
 });
