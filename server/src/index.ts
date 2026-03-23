@@ -20,7 +20,18 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Security headers
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'"],
+      imgSrc: ["'self'", "data:"],
+    },
+  },
+}));
 
 // CORS — explicit origins (dev: localhost + LAN IP)
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173,http://192.168.1.59:5173').split(',');
