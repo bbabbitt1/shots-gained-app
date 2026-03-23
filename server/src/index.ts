@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import roundRoutes from './routes/rounds.js';
 import shotRoutes from './routes/shots.js';
@@ -10,6 +12,9 @@ import courseRoutes from './routes/courses.js';
 import benchmarkRoutes from './routes/benchmarks.js';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -45,6 +50,15 @@ app.use('/api/benchmarks', apiLimiter, benchmarkRoutes);
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
+
+// Production: serve Vite-built frontend
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.join(__dirname, '../../../client/dist');
+  app.use(express.static(clientDist));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

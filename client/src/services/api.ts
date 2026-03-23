@@ -11,6 +11,12 @@ const headers = (json = true): HeadersInit => {
 };
 
 const handleRes = async (res: Response) => {
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('player');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Request failed' }));
     throw new Error(err.error || 'Request failed');

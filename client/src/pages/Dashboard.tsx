@@ -89,12 +89,24 @@ const Dashboard = () => {
             {hasData ? `${stats.rounds} round${stats.rounds > 1 ? 's' : ''} tracked` : 'Ready to track your game?'}
           </p>
         </div>
-        <button
-          onClick={() => navigate('/rounds')}
-          className="text-text-secondary text-sm hover:text-text-primary transition-colors"
-        >
-          All Rounds
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/rounds')}
+            className="text-text-secondary text-sm hover:text-text-primary transition-colors"
+          >
+            All Rounds
+          </button>
+          <button
+            onClick={() => {
+              localStorage.removeItem('token');
+              localStorage.removeItem('player');
+              navigate('/login');
+            }}
+            className="text-text-muted text-xs hover:text-sg-negative transition-colors"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Pending sync banner */}

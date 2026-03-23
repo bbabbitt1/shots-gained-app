@@ -32,7 +32,9 @@ router.post('/register', validate(registerSchema), async (req, res) => {
       `);
 
     const player = result.recordset[0];
-    const token = jwt.sign({ playerId: player.PlayerID }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '7d' });
+    const secret = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? undefined : 'dev-secret');
+    if (!secret) { res.status(500).json({ error: 'Server config error' }); return; }
+    const token = jwt.sign({ playerId: player.PlayerID }, secret, { expiresIn: '7d' });
 
     res.json({
       token,
@@ -65,7 +67,9 @@ router.post('/login', validate(loginSchema), async (req, res) => {
       return;
     }
 
-    const token = jwt.sign({ playerId: player.PlayerID }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '7d' });
+    const secret = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? undefined : 'dev-secret');
+    if (!secret) { res.status(500).json({ error: 'Server config error' }); return; }
+    const token = jwt.sign({ playerId: player.PlayerID }, secret, { expiresIn: '7d' });
 
     res.json({
       token,

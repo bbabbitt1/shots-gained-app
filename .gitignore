@@ -4,3 +4,14 @@ dist/
 *.db
 *.db-journal
 .DS_Store
+
+# Build output
+server/dist/
+client/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db

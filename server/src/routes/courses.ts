@@ -76,18 +76,32 @@ router.post('/cache', authenticate, validate(cacheCourseSchema), async (req, res
     const { clubName, courseName, apiSourceId, holes } = req.body;
     const pool = await getPool();
 
-    // Insert course
-    const result = await pool.request()
+    // Upsert course — check existing first
+    let courseId: number;
+    const existing = await pool.request()
       .input('clubName', clubName)
       .input('courseName', courseName)
       .input('apiSourceId', apiSourceId || null)
       .query(`
-        INSERT INTO DimCourse (ClubName, CourseName, APISourceID)
-        OUTPUT INSERTED.CourseID
-        VALUES (@clubName, @courseName, @apiSourceId)
+        SELECT CourseID FROM DimCourse
+        WHERE (APISourceID IS NOT NULL AND APISourceID = @apiSourceId)
+           OR (ClubName = @clubName AND CourseName = @courseName)
       `);
 
-    const courseId = result.recordset[0].CourseID;
+    if (existing.recordset.length > 0) {
+      courseId = existing.recordset[0].CourseID;
+    } else {
+      const result = await pool.request()
+        .input('clubName', clubName)
+        .input('courseName', courseName)
+        .input('apiSourceId', apiSourceId || null)
+        .query(`
+          INSERT INTO DimCourse (ClubName, CourseName, APISourceID)
+          OUTPUT INSERTED.CourseID
+          VALUES (@clubName, @courseName, @apiSourceId)
+        `);
+      courseId = result.recordset[0].CourseID;
+    }
 
     // Insert holes if provided
     if (holes?.length) {

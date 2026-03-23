@@ -11,7 +11,10 @@ export const findBenchmark = (
   distance: number
 ): number => {
   const surfaceRows = benchmarks.filter((b) => b.surface === surface);
-  if (surfaceRows.length === 0) return 0;
+  if (surfaceRows.length === 0) {
+    console.warn(`No benchmark data for surface: ${surface}`);
+    return 0;
+  }
 
   let closest = surfaceRows[0];
   let minDiff = Math.abs(surfaceRows[0].distance - distance);

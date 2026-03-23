@@ -108,8 +108,10 @@ router.get('/stats', authenticate, async (req: AuthRequest, res) => {
 router.get('/:roundId/scores', authenticate, async (req: AuthRequest, res) => {
   try {
     const pool = await getPool();
+    const roundId = parseInt(req.params.roundId as string);
+    if (isNaN(roundId)) { res.status(400).json({ error: 'Invalid roundId' }); return; }
     const result = await pool.request()
-      .input('roundId', parseInt(req.params.roundId as string))
+      .input('roundId', roundId)
       .input('playerId', req.playerId)
       .query(`
         SELECT * FROM FactHoleScores

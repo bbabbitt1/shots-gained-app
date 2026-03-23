@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mssql from 'mssql';
 import { getPool } from '../db/connection.js';
 import { authenticate, type AuthRequest } from '../middleware/auth.js';
 import { validate, batchShotsSchema } from '../middleware/validate.js';
@@ -21,111 +22,125 @@ router.post('/batch', authenticate, validate(batchShotsSchema), async (req: Auth
       return;
     }
 
-    const table = new (await import('mssql')).default.Table('FactShots');
-    table.create = false;
-    table.columns.add('PlayerID', (await import('mssql')).default.Int, { nullable: false });
-    table.columns.add('RoundID', (await import('mssql')).default.Int, { nullable: false });
-    table.columns.add('Hole', (await import('mssql')).default.Int, { nullable: false });
-    table.columns.add('Par', (await import('mssql')).default.Int, { nullable: false });
-    table.columns.add('HoleResult', (await import('mssql')).default.NVarChar(20), { nullable: true });
-    table.columns.add('Category', (await import('mssql')).default.NVarChar(20), { nullable: false });
-    table.columns.add('SurfaceStart', (await import('mssql')).default.NVarChar(20), { nullable: false });
-    table.columns.add('DistanceStart', (await import('mssql')).default.Float, { nullable: false });
-    table.columns.add('SurfaceEnd', (await import('mssql')).default.NVarChar(20), { nullable: false });
-    table.columns.add('DistanceEnd', (await import('mssql')).default.Float, { nullable: false });
-    table.columns.add('ClubUsed', (await import('mssql')).default.NVarChar(50), { nullable: true });
-    table.columns.add('ShotShape', (await import('mssql')).default.NVarChar(50), { nullable: true });
-    table.columns.add('Penalty', (await import('mssql')).default.Bit, { nullable: false });
-    table.columns.add('StrokesGained', (await import('mssql')).default.Float, { nullable: false });
-    table.columns.add('ShotResult', (await import('mssql')).default.NVarChar(20), { nullable: true });
-    table.columns.add('ShotDetails', (await import('mssql')).default.NVarChar((await import('mssql')).default.MAX), { nullable: true });
+    const transaction = new mssql.Transaction(pool);
+    await transaction.begin();
 
-    for (const s of shots) {
-      table.rows.add(
-        req.playerId, roundId, s.hole, s.par, s.holeResult || null,
-        s.category, s.surfaceStart, s.distanceStart, s.surfaceEnd, s.distanceEnd,
-        s.clubUsed || null, s.shotShape || null, s.penalty ? 1 : 0, s.strokesGained,
-        s.shotResult || null,
-        s.shotDetails ? JSON.stringify(s.shotDetails) : null
-      );
-    }
+    try {
+      const table = new mssql.Table('FactShots');
+      table.create = false;
+      table.columns.add('PlayerID', mssql.Int, { nullable: false });
+      table.columns.add('RoundID', mssql.Int, { nullable: false });
+      table.columns.add('Hole', mssql.Int, { nullable: false });
+      table.columns.add('Par', mssql.Int, { nullable: false });
+      table.columns.add('HoleResult', mssql.NVarChar(20), { nullable: true });
+      table.columns.add('Category', mssql.NVarChar(20), { nullable: false });
+      table.columns.add('SurfaceStart', mssql.NVarChar(20), { nullable: false });
+      table.columns.add('DistanceStart', mssql.Float, { nullable: false });
+      table.columns.add('SurfaceEnd', mssql.NVarChar(20), { nullable: false });
+      table.columns.add('DistanceEnd', mssql.Float, { nullable: false });
+      table.columns.add('ClubUsed', mssql.NVarChar(50), { nullable: true });
+      table.columns.add('ShotShape', mssql.NVarChar(50), { nullable: true });
+      table.columns.add('Penalty', mssql.Bit, { nullable: false });
+      table.columns.add('StrokesGained', mssql.Float, { nullable: false });
+      table.columns.add('ShotResult', mssql.NVarChar(20), { nullable: true });
+      table.columns.add('ShotDetails', mssql.NVarChar(mssql.MAX), { nullable: true });
 
-    await pool.request().bulk(table);
+      for (const s of shots) {
+        table.rows.add(
+          req.playerId, roundId, s.hole, s.par, s.holeResult || null,
+          s.category, s.surfaceStart, s.distanceStart, s.surfaceEnd, s.distanceEnd,
+          s.clubUsed || null, s.shotShape || null, s.penalty ? 1 : 0, s.strokesGained,
+          s.shotResult || null,
+          s.shotDetails ? JSON.stringify(s.shotDetails) : null
+        );
+      }
 
-    // Build and insert FactHoleScores rollup
-    const holeMap = new Map<number, typeof shots>();
-    for (const s of shots) {
-      const arr = holeMap.get(s.hole) || [];
-      arr.push(s);
-      holeMap.set(s.hole, arr);
-    }
+      await new mssql.Request(transaction).bulk(table);
 
-    for (const [holeNum, holeShots] of holeMap) {
-      const par = holeShots[0].par;
-      const score = holeShots.reduce((n: number, s: typeof shots[0]) => n + 1 + (s.penalty ? 1 : 0), 0);
-      const scoreToPar = score - par;
-      const holeResult =
-        scoreToPar <= -3 ? 'Albatross' :
-        scoreToPar === -2 ? 'Eagle' :
-        scoreToPar === -1 ? 'Birdie' :
-        scoreToPar === 0 ? 'Par' :
-        scoreToPar === 1 ? 'Bogey' :
-        scoreToPar === 2 ? 'Double' :
-        scoreToPar === 3 ? 'Triple' : 'Other';
+      // Build and insert FactHoleScores rollup
+      const holeMap = new Map<number, typeof shots>();
+      for (const s of shots) {
+        const arr = holeMap.get(s.hole) || [];
+        arr.push(s);
+        holeMap.set(s.hole, arr);
+      }
 
-      const teeShot = holeShots[0];
-      const fairwayResult = par >= 4 ? (teeShot.shotResult || null) : null;
-      const girEligible = par - 2;
-      let gir = false;
-      for (let i = 0; i < Math.min(girEligible, holeShots.length); i++) {
-        if (holeShots[i].surfaceEnd === 'Green' || holeShots[i].surfaceEnd === 'Hole') {
-          gir = true;
-          break;
+      for (const [holeNum, holeShots] of holeMap) {
+        const par = holeShots[0].par;
+        const score = holeShots.reduce((n: number, s: typeof shots[0]) => n + 1 + (s.penalty ? 1 : 0), 0);
+        const scoreToPar = score - par;
+        const holeResult =
+          scoreToPar <= -3 ? 'Albatross' :
+          scoreToPar === -2 ? 'Eagle' :
+          scoreToPar === -1 ? 'Birdie' :
+          scoreToPar === 0 ? 'Par' :
+          scoreToPar === 1 ? 'Bogey' :
+          scoreToPar === 2 ? 'Double' :
+          scoreToPar === 3 ? 'Triple' : 'Other';
+
+        const teeShot = holeShots[0];
+        const fairwayResult = par >= 4 ? (teeShot.shotResult || null) : null;
+
+        // GIR: count cumulative strokes (including penalties) to check if green reached within par-2 strokes
+        const girEligible = par - 2;
+        let gir = false;
+        let strokeCount = 0;
+        for (const s of holeShots) {
+          strokeCount += 1 + (s.penalty ? 1 : 0);
+          if (strokeCount > girEligible) break;
+          if (s.surfaceEnd === 'Green' || s.surfaceEnd === 'Hole') {
+            gir = true;
+            break;
+          }
         }
-      }
-      const putts = holeShots.filter((s: typeof shots[0]) => s.category === 'Putting').length;
+        const putts = holeShots.filter((s: typeof shots[0]) => s.category === 'Putting').length;
 
-      let upAndDown: boolean | null = null;
-      if (!gir) {
-        const sgIdx = holeShots.findIndex((s: typeof shots[0]) => s.category === 'Short Game');
-        if (sgIdx >= 0) {
-          const remaining = holeShots.slice(sgIdx);
-          upAndDown = remaining.length <= 2 && remaining[remaining.length - 1].surfaceEnd === 'Hole';
+        let upAndDown: boolean | null = null;
+        if (!gir) {
+          const sgIdx = holeShots.findIndex((s: typeof shots[0]) => s.category === 'Short Game');
+          if (sgIdx >= 0) {
+            const remaining = holeShots.slice(sgIdx);
+            upAndDown = remaining.length <= 2 && remaining[remaining.length - 1].surfaceEnd === 'Hole';
+          }
         }
+
+        const sgByCategory = { Driving: 0, Approach: 0, 'Short Game': 0, Putting: 0 };
+        for (const s of holeShots) {
+          sgByCategory[s.category as keyof typeof sgByCategory] += s.strokesGained;
+        }
+        const sgTotal = holeShots.reduce((sum: number, s: typeof shots[0]) => sum + s.strokesGained, 0);
+
+        await new mssql.Request(transaction)
+          .input('roundId', roundId)
+          .input('playerId', req.playerId)
+          .input('hole', holeNum)
+          .input('par', par)
+          .input('score', score)
+          .input('scoreToPar', scoreToPar)
+          .input('holeResult', holeResult)
+          .input('fairwayResult', fairwayResult)
+          .input('gir', gir ? 1 : 0)
+          .input('putts', putts)
+          .input('upAndDown', upAndDown === null ? null : upAndDown ? 1 : 0)
+          .input('sgTotal', sgTotal)
+          .input('sgDriving', sgByCategory.Driving)
+          .input('sgApproach', sgByCategory.Approach)
+          .input('sgShortGame', sgByCategory['Short Game'])
+          .input('sgPutting', sgByCategory.Putting)
+          .query(`
+            INSERT INTO FactHoleScores
+              (RoundID, PlayerID, Hole, Par, Score, ScoreToPar, HoleResult, FairwayResult, GreenInReg, Putts, UpAndDown, SGTotal, SGDriving, SGApproach, SGShortGame, SGPutting)
+            VALUES
+              (@roundId, @playerId, @hole, @par, @score, @scoreToPar, @holeResult, @fairwayResult, @gir, @putts, @upAndDown, @sgTotal, @sgDriving, @sgApproach, @sgShortGame, @sgPutting)
+          `);
       }
 
-      const sgByCategory = { Driving: 0, Approach: 0, 'Short Game': 0, Putting: 0 };
-      for (const s of holeShots) {
-        sgByCategory[s.category as keyof typeof sgByCategory] += s.strokesGained;
-      }
-      const sgTotal = holeShots.reduce((sum: number, s: typeof shots[0]) => sum + s.strokesGained, 0);
-
-      await pool.request()
-        .input('roundId', roundId)
-        .input('playerId', req.playerId)
-        .input('hole', holeNum)
-        .input('par', par)
-        .input('score', score)
-        .input('scoreToPar', scoreToPar)
-        .input('holeResult', holeResult)
-        .input('fairwayResult', fairwayResult)
-        .input('gir', gir ? 1 : 0)
-        .input('putts', putts)
-        .input('upAndDown', upAndDown === null ? null : upAndDown ? 1 : 0)
-        .input('sgTotal', sgTotal)
-        .input('sgDriving', sgByCategory.Driving)
-        .input('sgApproach', sgByCategory.Approach)
-        .input('sgShortGame', sgByCategory['Short Game'])
-        .input('sgPutting', sgByCategory.Putting)
-        .query(`
-          INSERT INTO FactHoleScores
-            (RoundID, PlayerID, Hole, Par, Score, ScoreToPar, HoleResult, FairwayResult, GreenInReg, Putts, UpAndDown, SGTotal, SGDriving, SGApproach, SGShortGame, SGPutting)
-          VALUES
-            (@roundId, @playerId, @hole, @par, @score, @scoreToPar, @holeResult, @fairwayResult, @gir, @putts, @upAndDown, @sgTotal, @sgDriving, @sgApproach, @sgShortGame, @sgPutting)
-        `);
+      await transaction.commit();
+      res.json({ saved: shots.length, holes: holeMap.size });
+    } catch (txErr) {
+      await transaction.rollback();
+      throw txErr;
     }
-
-    res.json({ saved: shots.length, holes: holeMap.size });
   } catch (err) {
     console.error('Save shots error:', err);
     res.status(500).json({ error: 'Failed to save shots' });
@@ -135,9 +150,11 @@ router.post('/batch', authenticate, validate(batchShotsSchema), async (req: Auth
 // Get shots for a round
 router.get('/:roundId', authenticate, async (req: AuthRequest, res) => {
   try {
+    const roundId = parseInt(req.params.roundId as string);
+    if (isNaN(roundId)) { res.status(400).json({ error: 'Invalid roundId' }); return; }
     const pool = await getPool();
     const result = await pool.request()
-      .input('roundId', parseInt(req.params.roundId as string))
+      .input('roundId', roundId)
       .input('playerId', req.playerId)
       .query('SELECT * FROM FactShots WHERE RoundID = @roundId AND PlayerID = @playerId ORDER BY ShotID');
 
