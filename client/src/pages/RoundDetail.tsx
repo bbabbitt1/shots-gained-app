@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getHoleScores } from '../services/api';
-import { formatSG } from '@shared/sg-calculator';
-import type { Category, SGByCategory } from '@shared/types';
+import { getHoleScores, getShots, getRound, deleteRound, updateShot, deleteShot, getBenchmarks } from '../services/api';
+import { formatSG, calculateStrokesGained } from '@shared/sg-calculator';
+import type { Category, SGByCategory, Shot, BenchmarkRow } from '@shared/types';
 
 interface HoleScore {
   Hole: number;
@@ -21,21 +21,73 @@ interface HoleScore {
   SGPutting: number;
 }
 
+interface DBShot {
+  ShotID: number;
+  Hole: number;
+  Par: number;
+  Category: string;
+  SurfaceStart: string;
+  DistanceStart: number;
+  SurfaceEnd: string;
+  DistanceEnd: number;
+  ClubUsed: string | null;
+  ShotResult: string | null;
+  Penalty: boolean;
+  StrokesGained: number;
+}
+
+interface RoundMeta {
+  RoundID: number;
+  CourseID: number;
+  RoundDate: string;
+  HolesPlayed: number;
+  TeePreference: string;
+  Benchmark: string;
+  ClubName: string;
+  CourseName: string;
+}
+
 const CATEGORIES: Category[] = ['Driving', 'Approach', 'Short Game', 'Putting'];
+const SURFACES = ['Tee', 'Fairway', 'Rough', 'Bunker', 'Green', 'Recovery'] as const;
+const END_SURFACES = [...SURFACES, 'Hole'] as const;
 
 const RoundDetail = () => {
   const { roundId } = useParams();
   const navigate = useNavigate();
   const [holes, setHoles] = useState<HoleScore[]>([]);
+  const [shots, setShots] = useState<DBShot[]>([]);
+  const [roundMeta, setRoundMeta] = useState<RoundMeta | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedHole, setExpandedHole] = useState<number | null>(null);
+  const [editingShot, setEditingShot] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<Partial<DBShot>>({});
+  const [confirmDelete, setConfirmDelete] = useState<'round' | number | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [benchmarks, setBenchmarks] = useState<BenchmarkRow[]>([]);
 
-  useEffect(() => {
-    if (!roundId) return;
-    getHoleScores(parseInt(roundId))
-      .then(setHoles)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [roundId]);
+  const rid = parseInt(roundId || '0');
+
+  const loadData = useCallback(async () => {
+    if (!rid) return;
+    try {
+      const [h, s, r, b] = await Promise.all([
+        getHoleScores(rid),
+        getShots(rid),
+        getRound(rid),
+        getBenchmarks().catch(() => []),
+      ]);
+      setHoles(h);
+      setShots(s);
+      setRoundMeta(r);
+      setBenchmarks(b);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, [rid]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const totals = useMemo(() => {
     const sg: SGByCategory = { Driving: 0, Approach: 0, 'Short Game': 0, Putting: 0 };
@@ -68,6 +120,86 @@ const RoundDetail = () => {
   const sgColor = (v: number) => v > 0 ? 'text-sg-positive' : v < 0 ? 'text-sg-negative' : 'text-sg-neutral';
   const scoreColor = (v: number) => v < 0 ? 'text-sg-positive' : v > 0 ? 'text-sg-negative' : 'text-text-primary';
 
+  const shotsForHole = (holeNum: number) => shots.filter((s) => s.Hole === holeNum);
+
+  const handleDeleteRound = async () => {
+    setActionLoading(true);
+    try {
+      await deleteRound(rid);
+      navigate('/rounds');
+    } catch {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteShot = async (shotId: number) => {
+    setActionLoading(true);
+    try {
+      await deleteShot(shotId);
+      setConfirmDelete(null);
+      await loadData();
+    } catch {
+      // ignore
+    }
+    setActionLoading(false);
+  };
+
+  const startEdit = (shot: DBShot) => {
+    setEditingShot(shot.ShotID);
+    setEditForm({
+      SurfaceStart: shot.SurfaceStart,
+      DistanceStart: shot.DistanceStart,
+      SurfaceEnd: shot.SurfaceEnd,
+      DistanceEnd: shot.DistanceEnd,
+      ClubUsed: shot.ClubUsed,
+      Penalty: shot.Penalty,
+      Category: shot.Category,
+    });
+  };
+
+  const handleSaveEdit = async (shot: DBShot) => {
+    setActionLoading(true);
+    try {
+      // Recalculate SG if positions changed
+      let sg = shot.StrokesGained;
+      if (benchmarks.length > 0 && (
+        editForm.SurfaceStart !== shot.SurfaceStart ||
+        editForm.DistanceStart !== shot.DistanceStart ||
+        editForm.SurfaceEnd !== shot.SurfaceEnd ||
+        editForm.DistanceEnd !== shot.DistanceEnd ||
+        editForm.Penalty !== shot.Penalty
+      )) {
+        sg = calculateStrokesGained(benchmarks, {
+          surfaceStart: editForm.SurfaceStart as any,
+          distanceStart: editForm.DistanceStart!,
+          surfaceEnd: editForm.SurfaceEnd as any,
+          distanceEnd: editForm.DistanceEnd!,
+          penalty: editForm.Penalty || false,
+        });
+      }
+
+      await updateShot(shot.ShotID, {
+        surfaceStart: editForm.SurfaceStart,
+        distanceStart: editForm.DistanceStart,
+        surfaceEnd: editForm.SurfaceEnd,
+        distanceEnd: editForm.DistanceEnd,
+        clubUsed: editForm.ClubUsed || undefined,
+        penalty: editForm.Penalty,
+        category: editForm.Category,
+        strokesGained: sg,
+      });
+      setEditingShot(null);
+      await loadData();
+    } catch {
+      // ignore
+    }
+    setActionLoading(false);
+  };
+
+  const handleResumeRound = () => {
+    navigate(`/round/resume/${rid}`);
+  };
+
   if (loading) {
     return <div className="min-h-dvh flex items-center justify-center"><p className="text-text-secondary">Loading...</p></div>;
   }
@@ -76,7 +208,12 @@ const RoundDetail = () => {
     return (
       <div className="min-h-dvh flex items-center justify-center flex-col gap-3">
         <p className="text-text-secondary">No data for this round</p>
-        <button onClick={() => navigate('/rounds')} className="text-accent hover:underline text-sm py-2 min-h-[44px]">Back to rounds</button>
+        <div className="flex gap-3">
+          <button onClick={() => navigate('/rounds')} className="text-accent hover:underline text-sm py-2 min-h-[44px]">Back to rounds</button>
+          {roundMeta && (
+            <button onClick={handleResumeRound} className="text-sg-positive hover:underline text-sm py-2 min-h-[44px]">Add shots</button>
+          )}
+        </div>
       </div>
     );
   }
@@ -85,9 +222,55 @@ const RoundDetail = () => {
 
   return (
     <div className="min-h-dvh px-4 pt-6 pb-10 max-w-lg mx-auto space-y-4">
-      <button onClick={() => navigate('/rounds')} className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors">
-        ← Rounds
-      </button>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <button onClick={() => navigate('/rounds')} className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors">
+          ← Rounds
+        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleResumeRound}
+            className="text-sm bg-accent/20 text-accent px-3 py-2 min-h-[44px] rounded-lg hover:bg-accent/30 transition-colors font-medium"
+          >
+            Continue Round
+          </button>
+          <button
+            onClick={() => setConfirmDelete('round')}
+            className="text-sm bg-sg-negative/20 text-sg-negative px-3 py-2 min-h-[44px] rounded-lg hover:bg-sg-negative/30 transition-colors font-medium"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+
+      {/* Delete Round Confirmation */}
+      {confirmDelete === 'round' && (
+        <div className="bg-sg-negative/10 border border-sg-negative/30 rounded-xl p-4 space-y-3">
+          <p className="text-text-primary text-sm">Delete this entire round? This cannot be undone.</p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDeleteRound}
+              disabled={actionLoading}
+              className="flex-1 bg-sg-negative text-white font-semibold py-3 rounded-lg text-sm"
+            >
+              {actionLoading ? 'Deleting...' : 'Yes, Delete'}
+            </button>
+            <button
+              onClick={() => setConfirmDelete(null)}
+              className="flex-1 bg-bg-surface text-text-primary py-3 rounded-lg text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Round info */}
+      {roundMeta && (
+        <div className="text-center text-text-secondary text-xs">
+          {roundMeta.ClubName} — {roundMeta.CourseName} · {roundMeta.TeePreference} tees · {new Date(roundMeta.RoundDate).toLocaleDateString()}
+        </div>
+      )}
 
       {/* Score */}
       <div className="bg-bg-card border border-border rounded-xl p-4 text-center">
@@ -160,7 +343,7 @@ const RoundDetail = () => {
         </div>
       </div>
 
-      {/* Hole-by-Hole */}
+      {/* Hole-by-Hole (expandable) */}
       <div className="bg-bg-card border border-border rounded-xl p-4">
         <div className="text-text-secondary text-xs uppercase tracking-wider mb-3">Hole by Hole</div>
         <div className="space-y-1">
@@ -172,12 +355,153 @@ const RoundDetail = () => {
             <div>Result</div>
           </div>
           {holes.map((h) => (
-            <div key={h.Hole} className="grid grid-cols-[2.5rem_2.5rem_2.5rem_3.5rem_1fr] gap-2 text-sm py-1.5 border-b border-border/30 last:border-0">
-              <div className="text-text-secondary">{h.Hole}</div>
-              <div className="text-text-secondary">{h.Par}</div>
-              <div className={`font-semibold ${scoreColor(h.ScoreToPar)}`}>{h.Score}</div>
-              <div className={`font-semibold ${sgColor(h.SGTotal)}`}>{formatSG(h.SGTotal)}</div>
-              <div className={`text-xs self-center ${scoreColor(h.ScoreToPar)}`}>{h.HoleResult}</div>
+            <div key={h.Hole}>
+              {/* Hole row — tap to expand */}
+              <div
+                onClick={() => setExpandedHole(expandedHole === h.Hole ? null : h.Hole)}
+                className="grid grid-cols-[2.5rem_2.5rem_2.5rem_3.5rem_1fr] gap-2 text-sm py-1.5 border-b border-border/30 last:border-0 cursor-pointer hover:bg-bg-surface/50 transition-colors"
+              >
+                <div className="text-text-secondary">{h.Hole}</div>
+                <div className="text-text-secondary">{h.Par}</div>
+                <div className={`font-semibold ${scoreColor(h.ScoreToPar)}`}>{h.Score}</div>
+                <div className={`font-semibold ${sgColor(h.SGTotal)}`}>{formatSG(h.SGTotal)}</div>
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs ${scoreColor(h.ScoreToPar)}`}>{h.HoleResult}</span>
+                  <span className="text-text-muted text-xs">{expandedHole === h.Hole ? '▾' : '▸'}</span>
+                </div>
+              </div>
+
+              {/* Expanded: individual shots */}
+              {expandedHole === h.Hole && (
+                <div className="bg-bg-surface/30 border-l-2 border-accent/30 ml-2 pl-3 py-2 space-y-2">
+                  {shotsForHole(h.Hole).map((shot, i) => (
+                    <div key={shot.ShotID}>
+                      {editingShot === shot.ShotID ? (
+                        /* Edit form */
+                        <div className="space-y-2 bg-bg-surface rounded-lg p-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-text-muted text-xs">From</label>
+                              <select
+                                value={editForm.SurfaceStart}
+                                onChange={(e) => setEditForm({ ...editForm, SurfaceStart: e.target.value })}
+                                className="w-full bg-bg-card border border-border rounded px-2 py-1.5 text-sm text-text-primary"
+                              >
+                                {SURFACES.map((s) => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-text-muted text-xs">Distance</label>
+                              <input
+                                type="number"
+                                value={editForm.DistanceStart ?? ''}
+                                onChange={(e) => setEditForm({ ...editForm, DistanceStart: Number(e.target.value) })}
+                                className="w-full bg-bg-card border border-border rounded px-2 py-1.5 text-sm text-text-primary"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-text-muted text-xs">To</label>
+                              <select
+                                value={editForm.SurfaceEnd}
+                                onChange={(e) => setEditForm({ ...editForm, SurfaceEnd: e.target.value })}
+                                className="w-full bg-bg-card border border-border rounded px-2 py-1.5 text-sm text-text-primary"
+                              >
+                                {END_SURFACES.map((s) => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-text-muted text-xs">Distance</label>
+                              <input
+                                type="number"
+                                value={editForm.DistanceEnd ?? ''}
+                                onChange={(e) => setEditForm({ ...editForm, DistanceEnd: Number(e.target.value) })}
+                                className="w-full bg-bg-card border border-border rounded px-2 py-1.5 text-sm text-text-primary"
+                                disabled={editForm.SurfaceEnd === 'Hole'}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <label className="flex items-center gap-1.5 text-sm text-text-secondary">
+                              <input
+                                type="checkbox"
+                                checked={editForm.Penalty || false}
+                                onChange={(e) => setEditForm({ ...editForm, Penalty: e.target.checked })}
+                                className="rounded"
+                              />
+                              Penalty
+                            </label>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleSaveEdit(shot)}
+                              disabled={actionLoading}
+                              className="flex-1 bg-accent text-white text-sm font-medium py-2 rounded-lg min-h-[44px]"
+                            >
+                              {actionLoading ? 'Saving...' : 'Save'}
+                            </button>
+                            <button
+                              onClick={() => setEditingShot(null)}
+                              className="flex-1 bg-bg-card text-text-secondary text-sm py-2 rounded-lg min-h-[44px]"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Shot display row */
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm flex-1">
+                            <span className="text-text-muted">#{i + 1}</span>{' '}
+                            <span className="text-text-primary">{shot.SurfaceStart} {shot.DistanceStart}</span>
+                            <span className="text-text-muted"> → </span>
+                            <span className="text-text-primary">{shot.SurfaceEnd} {shot.SurfaceEnd !== 'Hole' ? shot.DistanceEnd : ''}</span>
+                            {shot.ClubUsed && <span className="text-text-muted text-xs ml-1">({shot.ClubUsed})</span>}
+                            {shot.Penalty && <span className="text-sg-negative text-xs ml-1">+P</span>}
+                          </div>
+                          <span className={`text-sm font-semibold mr-2 ${sgColor(shot.StrokesGained)}`}>
+                            {formatSG(shot.StrokesGained)}
+                          </span>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => startEdit(shot)}
+                              className="text-accent text-xs px-2 py-1 min-h-[36px] min-w-[36px] hover:bg-accent/10 rounded"
+                            >
+                              Edit
+                            </button>
+                            {confirmDelete === shot.ShotID ? (
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => handleDeleteShot(shot.ShotID)}
+                                  disabled={actionLoading}
+                                  className="text-sg-negative text-xs px-2 py-1 min-h-[36px] bg-sg-negative/10 rounded font-medium"
+                                >
+                                  {actionLoading ? '...' : 'Yes'}
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDelete(null)}
+                                  className="text-text-secondary text-xs px-2 py-1 min-h-[36px] rounded"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDelete(shot.ShotID)}
+                                className="text-sg-negative text-xs px-2 py-1 min-h-[36px] min-w-[36px] hover:bg-sg-negative/10 rounded"
+                              >
+                                Del
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {shotsForHole(h.Hole).length === 0 && (
+                    <p className="text-text-muted text-xs">No shots recorded</p>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

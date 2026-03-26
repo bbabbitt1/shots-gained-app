@@ -6,6 +6,7 @@ import ShotEntry from './pages/ShotEntry';
 import RoundSummary from './pages/RoundSummary';
 import RoundHistory from './pages/RoundHistory';
 import RoundDetail from './pages/RoundDetail';
+import ResumeEntry from './pages/ResumeEntry';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
@@ -19,6 +20,7 @@ const App = () => {
         <Route path="/rounds/:roundId" element={<ProtectedRoute><RoundDetail /></ProtectedRoute>} />
         <Route path="/round/setup" element={<ProtectedRoute><RoundSetup /></ProtectedRoute>} />
         <Route path="/round/play" element={<ProtectedRoute><ShotEntry /></ProtectedRoute>} />
+        <Route path="/round/resume/:roundId" element={<ProtectedRoute><ResumeEntry /></ProtectedRoute>} />
         <Route path="/round/summary" element={<ProtectedRoute><RoundSummary /></ProtectedRoute>} />
       </Routes>
     </div>

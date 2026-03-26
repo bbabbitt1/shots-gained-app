@@ -64,3 +64,15 @@ export const getShots = (roundId: number) =>
 
 export const getHoleScores = (roundId: number) =>
   fetch(`${API_BASE}/rounds/${roundId}/scores`, { headers: headers(false) }).then(handleRes);
+
+export const getRound = (roundId: number) =>
+  fetch(`${API_BASE}/rounds/${roundId}`, { headers: headers(false) }).then(handleRes);
+
+export const deleteRound = (roundId: number) =>
+  fetch(`${API_BASE}/rounds/${roundId}`, { method: 'DELETE', headers: headers(false) }).then(handleRes);
+
+export const updateShot = (shotId: number, data: Record<string, unknown>) =>
+  fetch(`${API_BASE}/shots/${shotId}`, { method: 'PUT', headers: headers(), body: JSON.stringify(data) }).then(handleRes);
+
+export const deleteShot = (shotId: number) =>
+  fetch(`${API_BASE}/shots/${shotId}`, { method: 'DELETE', headers: headers(false) }).then(handleRes);

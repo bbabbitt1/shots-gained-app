@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mssql from 'mssql';
 import { getPool } from '../db/connection.js';
 import { authenticate, type AuthRequest } from '../middleware/auth.js';
 import { validate, createRoundSchema } from '../middleware/validate.js';
@@ -122,6 +123,69 @@ router.get('/:roundId/scores', authenticate, async (req: AuthRequest, res) => {
   } catch (err) {
     console.error('Get hole scores error:', err);
     res.status(500).json({ error: 'Failed to get hole scores' });
+  }
+});
+
+// Delete a round (cascade: FactShots, FactHoleScores, DimRound)
+router.delete('/:roundId', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const roundId = parseInt(req.params.roundId as string);
+    if (isNaN(roundId)) { res.status(400).json({ error: 'Invalid roundId' }); return; }
+
+    const pool = await getPool();
+
+    // Verify ownership
+    const check = await pool.request()
+      .input('roundId', roundId)
+      .input('playerId', req.playerId)
+      .query('SELECT 1 FROM DimRound WHERE RoundID = @roundId AND PlayerID = @playerId');
+    if (check.recordset.length === 0) { res.status(403).json({ error: 'Unauthorized' }); return; }
+
+    const transaction = new mssql.Transaction(pool);
+    await transaction.begin();
+    try {
+      await new mssql.Request(transaction).input('roundId', roundId)
+        .query('DELETE FROM FactShots WHERE RoundID = @roundId');
+      await new mssql.Request(transaction).input('roundId', roundId)
+        .query('DELETE FROM FactHoleScores WHERE RoundID = @roundId');
+      await new mssql.Request(transaction).input('roundId', roundId)
+        .query('DELETE FROM DimRound WHERE RoundID = @roundId');
+      await transaction.commit();
+      res.json({ deleted: true });
+    } catch (txErr) {
+      try { await transaction.rollback(); } catch {}
+      throw txErr;
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Delete round error:', msg);
+    res.status(500).json({ error: 'Failed to delete round', detail: msg });
+  }
+});
+
+// Get round metadata (for resume)
+router.get('/:roundId', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const roundId = parseInt(req.params.roundId as string);
+    if (isNaN(roundId)) { res.status(400).json({ error: 'Invalid roundId' }); return; }
+
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('roundId', roundId)
+      .input('playerId', req.playerId)
+      .query(`
+        SELECT r.*, c.ClubName, c.CourseName
+        FROM DimRound r
+        LEFT JOIN DimCourse c ON r.CourseID = c.CourseID
+        WHERE r.RoundID = @roundId AND r.PlayerID = @playerId
+      `);
+
+    if (result.recordset.length === 0) { res.status(404).json({ error: 'Round not found' }); return; }
+    res.json(result.recordset[0]);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Get round error:', msg);
+    res.status(500).json({ error: 'Failed to get round', detail: msg });
   }
 });
 

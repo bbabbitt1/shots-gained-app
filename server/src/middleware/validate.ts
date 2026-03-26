@@ -51,6 +51,23 @@ const shotSchema = z.object({
   strokesGained: z.number(),
 });
 
+export const updateShotSchema = z.object({
+  hole: z.number().int().min(1).max(18).optional(),
+  par: z.number().int().min(3).max(6).optional(),
+  holeResult: z.string().max(20).optional(),
+  category: z.enum(['Driving', 'Approach', 'Short Game', 'Putting']).optional(),
+  surfaceStart: z.enum(['Tee', 'Fairway', 'Rough', 'Bunker', 'Green', 'Recovery']).optional(),
+  distanceStart: z.number().min(0).max(700).optional(),
+  surfaceEnd: z.enum(['Tee', 'Fairway', 'Rough', 'Bunker', 'Green', 'Recovery', 'Hole']).optional(),
+  distanceEnd: z.number().min(0).max(700).optional(),
+  clubUsed: z.string().max(50).optional(),
+  shotShape: z.string().max(50).optional(),
+  shotResult: z.string().max(20).optional(),
+  shotDetails: z.record(z.string(), z.unknown()).optional(),
+  penalty: z.boolean().optional(),
+  strokesGained: z.number().optional(),
+});
+
 export const batchShotsSchema = z.object({
   roundId: z.number().int().positive(),
   shots: z.array(shotSchema).min(1).max(200),
