@@ -2,11 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SGTracker from '../components/SGTracker';
 import ShotForm from '../components/ShotForm';
-import { getBenchmarks, getShots, getRound, getCourseDetails, saveShots } from '../services/api';
+import { getBenchmarks, getShots, getRound, getCourseDetails, saveShots, updateShot, deleteShot } from '../services/api';
 import { cacheBenchmarks, getCachedBenchmarks } from '../services/offline';
 import { useRound } from '../hooks/useRound';
-import { formatSG } from '@shared/sg-calculator';
-import type { Shot, BenchmarkRow, CourseHole } from '@shared/types';
+import { formatSG, calculateStrokesGained } from '@shared/sg-calculator';
+import type { Shot, BenchmarkRow, CourseHole, Surface } from '@shared/types';
+import { SURFACES, END_SURFACES } from '@shared/types';
 
 interface DBShot {
   ShotID: number;
@@ -35,6 +36,14 @@ const ResumeEntry = () => {
   const [saving, setSaving] = useState(false);
   const [existingShots, setExistingShots] = useState<Shot[]>([]);
   const [roundIdNum, setRoundIdNum] = useState(0);
+
+  const [editingShotId, setEditingShotId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ surfaceStart: '', distanceStart: 0, surfaceEnd: '', distanceEnd: 0, penalty: false });
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Map ShotID to existingShots index for quick lookup
+  const [shotIdMap, setShotIdMap] = useState<Map<number, number>>(new Map());
 
   const player = JSON.parse(localStorage.getItem('player') || '{}');
 
@@ -96,6 +105,11 @@ const ResumeEntry = () => {
         }));
 
         setExistingShots(converted);
+
+        // Build ShotID map: index in existingShots → ShotID
+        const idMap = new Map<number, number>();
+        (dbShots as DBShot[]).forEach((s, i) => idMap.set(i, s.ShotID));
+        setShotIdMap(idMap);
 
         // Find the next hole to play
         const completedHoles = new Set<number>();
@@ -159,6 +173,81 @@ const ResumeEntry = () => {
       const prevHole = round.state.currentHole - 1;
       const prevInfo = round.state.holes.find((h) => h.holeNumber === prevHole);
       round.setCurrentHole(prevHole, prevInfo?.par || 4);
+    }
+  };
+
+  const startEdit = (shot: Shot, existingIdx: number) => {
+    const shotId = shotIdMap.get(existingIdx);
+    if (!shotId) return;
+    setEditingShotId(shotId);
+    setEditForm({
+      surfaceStart: shot.surfaceStart,
+      distanceStart: shot.distanceStart,
+      surfaceEnd: shot.surfaceEnd,
+      distanceEnd: shot.distanceEnd,
+      penalty: shot.penalty,
+    });
+    setConfirmDeleteId(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingShotId || !round.state.benchmarks.length) return;
+    setActionLoading(true);
+    try {
+      const sg = calculateStrokesGained(round.state.benchmarks, {
+        surfaceStart: editForm.surfaceStart as Surface,
+        distanceStart: editForm.distanceStart,
+        surfaceEnd: editForm.surfaceEnd as Surface | 'Hole',
+        distanceEnd: editForm.distanceEnd,
+        penalty: editForm.penalty,
+      });
+      await updateShot(editingShotId, { ...editForm, strokesGained: sg });
+
+      // Update local state
+      const idx = [...shotIdMap.entries()].find(([, id]) => id === editingShotId)?.[0];
+      if (idx !== undefined) {
+        setExistingShots(prev => prev.map((s, i) => i === idx ? {
+          ...s,
+          surfaceStart: editForm.surfaceStart as Shot['surfaceStart'],
+          distanceStart: editForm.distanceStart,
+          surfaceEnd: editForm.surfaceEnd as Shot['surfaceEnd'],
+          distanceEnd: editForm.distanceEnd,
+          penalty: editForm.penalty,
+          strokesGained: sg,
+        } : s));
+      }
+      setEditingShotId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update shot');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDelete = async (existingIdx: number) => {
+    const shotId = shotIdMap.get(existingIdx);
+    if (!shotId) return;
+    setActionLoading(true);
+    try {
+      await deleteShot(shotId);
+      setExistingShots(prev => prev.filter((_, i) => i !== existingIdx));
+      // Rebuild shotIdMap
+      setShotIdMap(prev => {
+        const newMap = new Map<number, number>();
+        let newIdx = 0;
+        for (let i = 0; i < existingShots.length; i++) {
+          if (i === existingIdx) continue;
+          const oldId = prev.get(i);
+          if (oldId !== undefined) newMap.set(newIdx, oldId);
+          newIdx++;
+        }
+        return newMap;
+      });
+      setConfirmDeleteId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete shot');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -281,12 +370,69 @@ const ResumeEntry = () => {
             Shots this hole
           </div>
           {currentHoleAllShots.map((shot, i) => {
-            const isExisting = i < (currentHoleAllShots.length - currentHoleNewShots.length);
+            const existingCount = currentHoleAllShots.length - currentHoleNewShots.length;
+            const isExisting = i < existingCount;
+            // Find global index in existingShots array for this shot
+            const existingIdx = isExisting
+              ? existingShots.findIndex((s) => s === shot)
+              : -1;
+            const shotId = existingIdx >= 0 ? shotIdMap.get(existingIdx) : undefined;
+            const isEditing = shotId !== undefined && editingShotId === shotId;
+
+            if (isEditing) {
+              return (
+                <div key={i} className="py-2 border-b border-border/50 last:border-0 space-y-2">
+                  <div className="text-text-muted text-xs">#{i + 1} Editing</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-text-muted text-xs">From</label>
+                      <select value={editForm.surfaceStart} onChange={e => setEditForm(f => ({ ...f, surfaceStart: e.target.value }))}
+                        className="w-full bg-bg-surface border border-border rounded px-2 py-1.5 text-sm text-text-primary min-h-[44px]">
+                        {SURFACES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-text-muted text-xs">Dist</label>
+                      <input type="number" value={editForm.distanceStart} onChange={e => setEditForm(f => ({ ...f, distanceStart: +e.target.value }))}
+                        className="w-full bg-bg-surface border border-border rounded px-2 py-1.5 text-sm text-text-primary min-h-[44px]" />
+                    </div>
+                    <div>
+                      <label className="text-text-muted text-xs">To</label>
+                      <select value={editForm.surfaceEnd} onChange={e => setEditForm(f => ({ ...f, surfaceEnd: e.target.value }))}
+                        className="w-full bg-bg-surface border border-border rounded px-2 py-1.5 text-sm text-text-primary min-h-[44px]">
+                        {END_SURFACES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-text-muted text-xs">Dist</label>
+                      <input type="number" value={editForm.distanceEnd} disabled={editForm.surfaceEnd === 'Hole'}
+                        onChange={e => setEditForm(f => ({ ...f, distanceEnd: +e.target.value }))}
+                        className="w-full bg-bg-surface border border-border rounded px-2 py-1.5 text-sm text-text-primary min-h-[44px] disabled:opacity-30" />
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-text-secondary">
+                    <input type="checkbox" checked={editForm.penalty} onChange={e => setEditForm(f => ({ ...f, penalty: e.target.checked }))}
+                      className="w-5 h-5 rounded" />
+                    Penalty
+                  </label>
+                  <div className="flex gap-2">
+                    <button onClick={handleSaveEdit} disabled={actionLoading}
+                      className="flex-1 bg-accent hover:bg-accent-hover text-white text-sm font-semibold py-2 rounded-lg min-h-[44px]">
+                      {actionLoading ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={() => setEditingShotId(null)}
+                      className="flex-1 bg-bg-surface text-text-secondary text-sm py-2 rounded-lg min-h-[44px] hover:text-text-primary">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div key={i} className="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0">
-                <div className="text-sm">
+                <div className="text-sm flex-1">
                   <span className="text-text-muted">#{i + 1}</span>{' '}
-                  {isExisting && <span className="text-text-muted text-xs">(saved) </span>}
                   <span className="text-text-primary">{shot.surfaceStart} {shot.distanceStart}</span>
                   <span className="text-text-muted"> → </span>
                   <span className="text-text-primary">{shot.surfaceEnd} {shot.surfaceEnd !== 'Hole' ? shot.distanceEnd : ''}</span>
@@ -296,6 +442,25 @@ const ResumeEntry = () => {
                 }`}>
                   {formatSG(shot.strokesGained)}
                 </span>
+                {isExisting && existingIdx >= 0 && (
+                  <div className="flex gap-1 ml-2">
+                    {confirmDeleteId === shotId ? (
+                      <>
+                        <button onClick={() => handleDelete(existingIdx)} disabled={actionLoading}
+                          className="text-sg-negative text-xs px-2 py-1 min-h-[44px] font-semibold">Yes</button>
+                        <button onClick={() => setConfirmDeleteId(null)}
+                          className="text-text-muted text-xs px-2 py-1 min-h-[44px]">No</button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => startEdit(shot, existingIdx)}
+                          className="text-accent text-xs px-2 py-1 min-h-[44px]">Edit</button>
+                        <button onClick={() => { setConfirmDeleteId(shotId!); setEditingShotId(null); }}
+                          className="text-sg-negative text-xs px-2 py-1 min-h-[44px]">Del</button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
