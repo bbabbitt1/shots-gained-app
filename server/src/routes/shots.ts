@@ -112,6 +112,12 @@ router.post('/batch', authenticate, validate(batchShotsSchema), async (req: Auth
     await transaction.begin();
 
     try {
+      // Delete existing shots for these holes to allow re-saving
+      const holes = [...new Set(shots.map((s: typeof shots[0]) => s.hole))];
+      await new mssql.Request(transaction)
+        .input('roundId', roundId)
+        .query(`DELETE FROM FactShots WHERE RoundID = @roundId AND Hole IN (${holes.map(Number).join(',')})`);
+
       for (const s of shots) {
         await new mssql.Request(transaction)
           .input('playerId', req.playerId)
@@ -207,10 +213,18 @@ router.post('/batch', authenticate, validate(batchShotsSchema), async (req: Auth
           .input('sgShortGame', sgByCategory['Short Game'])
           .input('sgPutting', sgByCategory.Putting)
           .query(`
-            INSERT INTO FactHoleScores
+            MERGE FactHoleScores AS target
+            USING (SELECT @roundId AS RoundID, @hole AS Hole) AS source
+            ON target.RoundID = source.RoundID AND target.Hole = source.Hole
+            WHEN MATCHED THEN UPDATE SET
+              PlayerID = @playerId, Par = @par, Score = @score, ScoreToPar = @scoreToPar,
+              HoleResult = @holeResult, FairwayResult = @fairwayResult, GreenInReg = @gir,
+              Putts = @putts, UpAndDown = @upAndDown, SGTotal = @sgTotal,
+              SGDriving = @sgDriving, SGApproach = @sgApproach, SGShortGame = @sgShortGame, SGPutting = @sgPutting
+            WHEN NOT MATCHED THEN INSERT
               (RoundID, PlayerID, Hole, Par, Score, ScoreToPar, HoleResult, FairwayResult, GreenInReg, Putts, UpAndDown, SGTotal, SGDriving, SGApproach, SGShortGame, SGPutting)
             VALUES
-              (@roundId, @playerId, @hole, @par, @score, @scoreToPar, @holeResult, @fairwayResult, @gir, @putts, @upAndDown, @sgTotal, @sgDriving, @sgApproach, @sgShortGame, @sgPutting)
+              (@roundId, @playerId, @hole, @par, @score, @scoreToPar, @holeResult, @fairwayResult, @gir, @putts, @upAndDown, @sgTotal, @sgDriving, @sgApproach, @sgShortGame, @sgPutting);
           `);
       }
 
