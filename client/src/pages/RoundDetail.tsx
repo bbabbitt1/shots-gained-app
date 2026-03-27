@@ -63,6 +63,7 @@ const RoundDetail = () => {
   const [editForm, setEditForm] = useState<Partial<DBShot>>({});
   const [confirmDelete, setConfirmDelete] = useState<'round' | number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
   const [benchmarks, setBenchmarks] = useState<BenchmarkRow[]>([]);
 
   const rid = parseInt(roundId || '0');
@@ -134,12 +135,13 @@ const RoundDetail = () => {
 
   const handleDeleteShot = async (shotId: number) => {
     setActionLoading(true);
+    setActionError('');
     try {
       await deleteShot(shotId);
       setConfirmDelete(null);
       await loadData();
-    } catch {
-      // ignore
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Delete failed');
     }
     setActionLoading(false);
   };
@@ -182,16 +184,17 @@ const RoundDetail = () => {
         surfaceStart: editForm.SurfaceStart,
         distanceStart: editForm.DistanceStart,
         surfaceEnd: editForm.SurfaceEnd,
-        distanceEnd: editForm.DistanceEnd,
+        distanceEnd: editForm.DistanceEnd === undefined ? 0 : editForm.DistanceEnd,
         clubUsed: editForm.ClubUsed || undefined,
-        penalty: editForm.Penalty,
+        penalty: !!editForm.Penalty,
         category: editForm.Category,
         strokesGained: sg,
       });
       setEditingShot(null);
+      setActionError('');
       await loadData();
-    } catch {
-      // ignore
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Update failed');
     }
     setActionLoading(false);
   };
@@ -242,6 +245,13 @@ const RoundDetail = () => {
           </button>
         </div>
       </div>
+
+      {/* Action Error */}
+      {actionError && (
+        <div className="bg-sg-negative/10 border border-sg-negative/30 rounded-xl p-3 text-sg-negative text-sm">
+          {actionError}
+        </div>
+      )}
 
       {/* Delete Round Confirmation */}
       {confirmDelete === 'round' && (

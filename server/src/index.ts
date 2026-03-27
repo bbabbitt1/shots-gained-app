@@ -45,7 +45,7 @@ app.use(cors({
     else callback(new Error('CORS blocked'));
   },
   credentials: true,
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 

@@ -277,21 +277,19 @@ router.put('/:shotId', authenticate, validate(updateShotSchema), async (req: Aut
     };
 
     const setClauses: string[] = [];
-    const request = new mssql.Request(pool);
-    request.input('shotId', shotId);
+    const params: Array<{ key: string; val: unknown }> = [];
 
     for (const [jsKey, dbCol] of Object.entries(fieldMap)) {
       if (updates[jsKey] !== undefined) {
         const val = jsKey === 'penalty' ? (updates[jsKey] ? 1 : 0) : updates[jsKey];
         setClauses.push(`${dbCol} = @${jsKey}`);
-        request.input(jsKey, val);
+        params.push({ key: jsKey, val });
       }
     }
 
-    // Handle shotDetails separately (JSON)
     if (updates.shotDetails !== undefined) {
       setClauses.push('ShotDetails = @shotDetails');
-      request.input('shotDetails', JSON.stringify(updates.shotDetails));
+      params.push({ key: 'shotDetails', val: JSON.stringify(updates.shotDetails) });
     }
 
     if (setClauses.length === 0) { res.status(400).json({ error: 'No fields to update' }); return; }
@@ -299,18 +297,9 @@ router.put('/:shotId', authenticate, validate(updateShotSchema), async (req: Aut
     const transaction = new mssql.Transaction(pool);
     await transaction.begin();
     try {
-      // Update the shot
       const updateReq = new mssql.Request(transaction);
       updateReq.input('shotId', shotId);
-      for (const [jsKey, dbCol] of Object.entries(fieldMap)) {
-        if (updates[jsKey] !== undefined) {
-          const val = jsKey === 'penalty' ? (updates[jsKey] ? 1 : 0) : updates[jsKey];
-          updateReq.input(jsKey, val);
-        }
-      }
-      if (updates.shotDetails !== undefined) {
-        updateReq.input('shotDetails', JSON.stringify(updates.shotDetails));
-      }
+      for (const p of params) updateReq.input(p.key, p.val);
       await updateReq.query(`UPDATE FactShots SET ${setClauses.join(', ')} WHERE ShotID = @shotId`);
 
       // Recalculate hole scores for the affected hole(s)
