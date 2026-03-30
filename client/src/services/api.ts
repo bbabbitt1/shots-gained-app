@@ -76,3 +76,7 @@ export const updateShot = (shotId: number, data: Record<string, unknown>) =>
 
 export const deleteShot = (shotId: number) =>
   fetch(`${API_BASE}/shots/${shotId}`, { method: 'DELETE', headers: headers(false) }).then(handleRes);
+
+// Analysis
+export const getAnalysisShots = (filter: string) =>
+  fetch(`${API_BASE}/analysis/shots?filter=${encodeURIComponent(filter)}`, { headers: headers(false) }).then(handleRes);

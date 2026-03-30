@@ -91,10 +91,16 @@ const Dashboard = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
+            onClick={() => navigate('/analysis')}
+            className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors"
+          >
+            Analysis
+          </button>
+          <button
             onClick={() => navigate('/rounds')}
             className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors"
           >
-            All Rounds
+            Rounds
           </button>
           <button
             onClick={() => {

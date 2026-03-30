@@ -10,6 +10,7 @@ import roundRoutes from './routes/rounds.js';
 import shotRoutes from './routes/shots.js';
 import courseRoutes from './routes/courses.js';
 import benchmarkRoutes from './routes/benchmarks.js';
+import analysisRoutes from './routes/analysis.js';
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ app.use('/api/rounds', apiLimiter, roundRoutes);
 app.use('/api/shots', apiLimiter, shotRoutes);
 app.use('/api/courses', apiLimiter, courseRoutes);
 app.use('/api/benchmarks', apiLimiter, benchmarkRoutes);
+app.use('/api/analysis', apiLimiter, analysisRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });

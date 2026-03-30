@@ -6,7 +6,7 @@ import ShotDetailsPanel from './ShotDetailsPanel';
 
 const suggestClub = (distance: number, category: Category): string => {
   if (category === 'Short Game') {
-    if (distance <= 10) return '58°';
+    if (distance <= 10) return '60°';
     if (distance <= 30) return '56°';
     if (distance <= 50) return '52°';
     return 'PW';
@@ -21,10 +21,10 @@ const suggestClub = (distance: number, category: Category): string => {
   if (distance >= 155) return '8 Iron';
   if (distance >= 145) return '9 Iron';
   if (distance >= 130) return 'PW';
-  if (distance >= 115) return '50°';
+  if (distance >= 115) return '52°';
   if (distance >= 100) return '52°';
   if (distance >= 85) return '56°';
-  return '58°';
+  return '60°';
 };
 
 interface ShotFormProps {
