@@ -45,7 +45,8 @@ const ApproachChart = ({ shots }: { shots: AnalysisShot[] }) => {
       entry.sg += s.StrokesGained;
       entry.count += 1;
       if (s.SurfaceEnd !== 'Hole') {
-        entry.totalProx += s.DistanceEnd * 3;
+        const proxFt = s.SurfaceEnd === 'Green' ? s.DistanceEnd : s.DistanceEnd * 3;
+        entry.totalProx += proxFt;
         entry.girAttempts += 1;
         if (s.ShotResult === 'GIR') entry.girHit += 1;
       } else {
@@ -79,7 +80,7 @@ const ApproachChart = ({ shots }: { shots: AnalysisShot[] }) => {
         yardage: s.DistanceStart,
         surfaceStart: s.SurfaceStart,
         surfaceEnd: s.SurfaceEnd,
-        proximity: s.SurfaceEnd === 'Hole' ? 0 : s.DistanceEnd * 3,
+        proximity: s.SurfaceEnd === 'Hole' ? 0 : s.SurfaceEnd === 'Green' ? s.DistanceEnd : s.DistanceEnd * 3,
         unit: 'ft' as const,
         sg: s.StrokesGained,
         date: s.RoundDate,
