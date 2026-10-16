@@ -41,6 +41,14 @@ const Dashboard = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [unclaimedCount, setUnclaimedCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
+  // Remembered per device; a UI preference only, so storage failures just fall back to 'total'
+  const [sgView, setSgView] = useState<'total' | 'perRound'>(() => {
+    try { return localStorage.getItem('sgView') === 'perRound' ? 'perRound' : 'total'; } catch { return 'total'; }
+  });
+  const pickSgView = (v: 'total' | 'perRound') => {
+    setSgView(v);
+    try { localStorage.setItem('sgView', v); } catch { /* preference not persisted */ }
+  };
 
   const player = JSON.parse(localStorage.getItem('player') || '{}');
 
@@ -159,8 +167,32 @@ const Dashboard = () => {
         <>
           {/* SG bento: hero + category tiles */}
           <div className="card p-5 animate-rise [animation-delay:60ms]">
-            <div className="eyebrow">Avg SG / hole · all rounds</div>
-            <div className={`num mt-1 text-5xl font-semibold ${sgColor(stats.avgSGPerHole)}`}>{formatSG(stats.avgSGPerHole)}</div>
+            {(() => {
+              const total = stats.sgDriving + stats.sgApproach + stats.sgShortGame + stats.sgPutting;
+              const shown = sgView === 'perRound' ? total / stats.rounds : total;
+              return (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="eyebrow">{sgView === 'perRound' ? 'SG per round' : 'Total SG'}</div>
+                    <div role="group" aria-label="Shots gained view" className="flex shrink-0 rounded-full bg-bg-surface/70 ring-1 ring-white/10 p-0.5">
+                      {(['total', 'perRound'] as const).map((v) => (
+                        <button
+                          key={v}
+                          aria-pressed={sgView === v}
+                          onClick={() => pickSgView(v)}
+                          className={`min-h-[44px] px-3 rounded-full text-xs font-semibold transition-colors duration-200 ease-spring ${
+                            sgView === v ? 'bg-accent-hover text-white' : 'text-text-secondary hover:text-text-primary'
+                          }`}
+                        >
+                          {v === 'total' ? 'Total' : 'Per round'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={`num mt-1 text-5xl font-semibold ${sgColor(shown)}`}>{formatSG(shown)}</div>
+                </>
+              );
+            })()}
             <div className="mt-5 grid grid-cols-2 gap-2">
               {([
                 { label: 'Driving', val: stats.sgDriving, dot: 'bg-cat-driving' },
@@ -173,7 +205,9 @@ const Dashboard = () => {
                     <span className={`h-2 w-2 rounded-full ${dot}`} />
                     {label}
                   </div>
-                  <div className={`num mt-1 text-xl font-semibold ${sgColor(val)}`}>{formatSG(val)}</div>
+                  <div className={`num mt-1 text-xl font-semibold ${sgColor(val)}`}>
+                    {formatSG(sgView === 'perRound' ? val / stats.rounds : val)}
+                  </div>
                 </div>
               ))}
             </div>
