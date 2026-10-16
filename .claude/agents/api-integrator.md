@@ -9,7 +9,7 @@ You manage external API integration for the shots-gained-app, primarily the Golf
 
 ## Golf Course API
 - **Base URL:** `https://api.golfcourseapi.com/v1/`
-- **Auth:** Header `Authorization: Key E2ASQ6BSGEORKADN7DDAWCSTMA`
+- **Auth:** Header `Authorization: Key ${GOLF_API_KEY}` (from server env; never commit the key)
 - **Search Endpoint:** `GET /search?search_query={course_name}`
 
 ### Response Structure

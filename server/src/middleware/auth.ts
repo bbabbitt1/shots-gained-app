@@ -23,7 +23,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
 
   const token = header.slice(7);
   try {
-    const decoded = jwt.verify(token, getJwtSecret()) as { playerId: number };
+    const decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] }) as { playerId: number };
     req.playerId = decoded.playerId;
     next();
   } catch {

@@ -10,10 +10,16 @@ const headers = (json = true): HeadersInit => {
   return h;
 };
 
+// Also drop the service worker's cached API responses so the next user on this device can't read them
+export const clearSession = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('player');
+  if ('caches' in window) caches.delete('api-cache').catch(() => {});
+};
+
 const handleRes = async (res: Response) => {
   if (res.status === 401) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('player');
+    clearSession();
     window.location.href = '/login';
     throw new Error('Session expired');
   }

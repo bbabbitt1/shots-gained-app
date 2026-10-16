@@ -41,7 +41,8 @@ app.use(helmet({
 const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173,http://192.168.1.59:5173').split(',');
 app.use(cors({
-  origin: isProduction ? true : (origin, callback) => {
+  // Production serves the client same-origin, so no cross-origin access is granted
+  origin: isProduction ? false : (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) callback(null, true);
     else callback(new Error('CORS blocked'));
   },

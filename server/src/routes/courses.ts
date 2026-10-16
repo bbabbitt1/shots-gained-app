@@ -85,7 +85,8 @@ router.get('/details/:courseId', authenticate, async (req, res) => {
       return;
     }
 
-    // Otherwise hit external Golf Course API
+    // Otherwise hit external Golf Course API — numeric IDs only, so the path can't be steered
+    if (!/^\d+$/.test(courseId)) { res.status(400).json({ error: 'Invalid courseId' }); return; }
     const apiKey = process.env.GOLF_API_KEY;
     const response = await fetch(`https://api.golfcourseapi.com/v1/courses/${courseId}`, {
       headers: { Authorization: `Key ${apiKey}` },
@@ -137,7 +138,7 @@ router.post('/cache', authenticate, validate(cacheCourseSchema), async (req, res
       courseId = result.recordset[0].CourseID;
     }
 
-    // Upsert holes if provided
+    // Insert missing holes only — DimCourseHoles is shared, so one player can't overwrite par/yardage for everyone
     if (holes?.length) {
       for (const hole of holes) {
         await pool.request()
@@ -150,7 +151,6 @@ router.post('/cache', authenticate, validate(cacheCourseSchema), async (req, res
             MERGE DimCourseHoles AS target
             USING (SELECT @courseId AS CourseID, @holeNum AS HoleNumber, @tee AS Tee) AS source
             ON target.CourseID = source.CourseID AND target.HoleNumber = source.HoleNumber AND target.Tee = source.Tee
-            WHEN MATCHED THEN UPDATE SET Par = @par, Yardage = @yardage
             WHEN NOT MATCHED THEN INSERT (CourseID, HoleNumber, Par, Yardage, Tee) VALUES (@courseId, @holeNum, @par, @yardage, @tee);
           `);
       }

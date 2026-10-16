@@ -10,7 +10,7 @@ Real-time shots gained tracking web app for golf rounds. Replaces an existing Py
 - **Backend:** Node.js, Express, TypeScript
 - **Database:** Azure SQL (SQL Server)
 - **Hosting:** Azure App Service (or Azure Static Web Apps for frontend)
-- **API:** Golf Course API (`https://api.golfcourseapi.com/v1/`) — API Key: `E2ASQ6BSGEORKADN7DDAWCSTMA`
+- **API:** Golf Course API (`https://api.golfcourseapi.com/v1/`) — key in `GOLF_API_KEY` (server env only, never commit)
 
 ## Architecture
 
@@ -111,7 +111,7 @@ cd server && npm run db:seed     # Seed benchmark data
 --border:        #2A3A5C    /* Borders, dividers */
 --text-primary:  #F1F5F9    /* Primary text — near-white */
 --text-secondary:#94A3B8    /* Labels, secondary info */
---text-muted:    #64748B    /* Placeholders, disabled */
+--text-muted:    #8291A7    /* Placeholders, small labels — ≥4.5:1 on card/surface */
 
 /* Accent */
 --accent:        #3B82F6    /* Primary actions, buttons, links */
@@ -136,4 +136,7 @@ cd server && npm run db:seed     # Seed benchmark data
 - High contrast for outdoor sunlight readability
 - Minimal taps per shot entry — smart defaults, auto-carry from previous shot
 - Large touch targets (44px+ minimum)
-- Font: Inter (Google Fonts) — clean, legible at small sizes
+- Font: Geist (UI) + Geist Mono (SG/score numbers), Google Fonts
+- Shared classes in `client/src/index.css`: `.card` (double-bezel), `.tile`, `.btn-primary`/`.btn-icon`, `.btn-secondary`, `.btn-ghost`, `.chip`, `.eyebrow`, `.num` — use these, not ad-hoc card/button styles
+- Floating `NavIsland` on /home, /rounds, /analysis; hidden during round entry
+- Motion: `ease-spring` + `animate-rise` (transform/opacity only); respects prefers-reduced-motion
