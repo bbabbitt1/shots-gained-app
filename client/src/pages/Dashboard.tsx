@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPlayerStats, clearSession } from '../services/api';
-import { getPendingRounds } from '../services/offline';
+import { getPendingRounds, getUnclaimedRounds, claimUnclaimedRounds } from '../services/offline';
 import { syncPendingRounds } from '../services/sync';
 import { formatSG } from '@shared/sg-calculator';
 
@@ -39,6 +39,7 @@ const Dashboard = () => {
   const [recent, setRecent] = useState<RecentRound[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
+  const [unclaimedCount, setUnclaimedCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
 
   const player = JSON.parse(localStorage.getItem('player') || '{}');
@@ -52,6 +53,7 @@ const Dashboard = () => {
       .catch(() => {})
       .finally(() => setLoading(false));
     getPendingRounds().then((p) => setPendingCount(p.length));
+    getUnclaimedRounds().then((u) => setUnclaimedCount(u.length));
   };
 
   useEffect(() => {
@@ -118,6 +120,29 @@ const Dashboard = () => {
               className="btn-ghost text-cat-driving font-semibold hover:!text-cat-driving"
             >
               Sync now
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Rounds queued before per-player tagging: never auto-synced, only on an explicit claim */}
+      {unclaimedCount > 0 && !syncing && (
+        <div className="bg-accent/10 ring-1 ring-accent/30 rounded-2xl pl-4 pr-1 py-1 flex items-center justify-between gap-2">
+          <span className="text-text-primary text-sm">
+            {unclaimedCount} offline round{unclaimedCount > 1 ? 's' : ''} from before this update
+          </span>
+          {navigator.onLine && (
+            <button
+              onClick={async () => {
+                setSyncing(true);
+                await claimUnclaimedRounds();
+                await syncPendingRounds();
+                setSyncing(false);
+                loadData();
+              }}
+              className="btn-ghost shrink-0 text-accent font-semibold hover:!text-accent"
+            >
+              Sync to my account
             </button>
           )}
         </div>

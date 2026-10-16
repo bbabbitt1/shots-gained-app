@@ -79,8 +79,8 @@ const RoundSummary = () => {
         setSavedOffline(true);
         sessionStorage.removeItem('roundSetup');
         sessionStorage.removeItem('roundShots');
-      } catch {
-        setError('Failed to save offline');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to save offline');
       }
       setSaving(false);
       return;
