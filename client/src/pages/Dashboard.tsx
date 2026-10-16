@@ -42,10 +42,10 @@ const Dashboard = () => {
   const [unclaimedCount, setUnclaimedCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
   // Remembered per device; a UI preference only, so storage failures just fall back to 'total'
-  const [sgView, setSgView] = useState<'total' | 'perRound'>(() => {
-    try { return localStorage.getItem('sgView') === 'perRound' ? 'perRound' : 'total'; } catch { return 'total'; }
+  const [sgView, setSgView] = useState<'total' | 'per18'>(() => {
+    try { return localStorage.getItem('sgView') === 'per18' ? 'per18' : 'total'; } catch { return 'total'; }
   });
-  const pickSgView = (v: 'total' | 'perRound') => {
+  const pickSgView = (v: 'total' | 'per18') => {
     setSgView(v);
     try { localStorage.setItem('sgView', v); } catch { /* preference not persisted */ }
   };
@@ -169,13 +169,13 @@ const Dashboard = () => {
           <div className="card p-5 animate-rise [animation-delay:60ms]">
             {(() => {
               const total = stats.sgDriving + stats.sgApproach + stats.sgShortGame + stats.sgPutting;
-              const shown = sgView === 'perRound' ? total / stats.rounds : total;
+              const shown = sgView === 'per18' ? (total * 18) / stats.holes : total;
               return (
                 <>
                   <div className="flex items-center justify-between gap-3">
-                    <div className="eyebrow">{sgView === 'perRound' ? 'SG per round' : 'Total SG'}</div>
+                    <div className="eyebrow">{sgView === 'per18' ? 'SG per 18 holes' : 'Total SG'}</div>
                     <div role="group" aria-label="Shots gained view" className="flex shrink-0 rounded-full bg-bg-surface/70 ring-1 ring-white/10 p-0.5">
-                      {(['total', 'perRound'] as const).map((v) => (
+                      {(['total', 'per18'] as const).map((v) => (
                         <button
                           key={v}
                           aria-pressed={sgView === v}
@@ -184,7 +184,7 @@ const Dashboard = () => {
                             sgView === v ? 'bg-accent-hover text-white' : 'text-text-secondary hover:text-text-primary'
                           }`}
                         >
-                          {v === 'total' ? 'Total' : 'Per round'}
+                          {v === 'total' ? 'Total' : 'Per 18'}
                         </button>
                       ))}
                     </div>
@@ -206,7 +206,7 @@ const Dashboard = () => {
                     {label}
                   </div>
                   <div className={`num mt-1 text-xl font-semibold ${sgColor(val)}`}>
-                    {formatSG(sgView === 'perRound' ? val / stats.rounds : val)}
+                    {formatSG(sgView === 'per18' ? (val * 18) / stats.holes : val)}
                   </div>
                 </div>
               ))}
