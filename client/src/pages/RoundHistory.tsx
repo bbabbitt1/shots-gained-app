@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getRounds } from '../services/api';
+import Icon from '../components/Icons';
 
 interface RoundRow {
   RoundID: number;
@@ -29,15 +30,12 @@ const RoundHistory = () => {
   };
 
   return (
-    <div className="min-h-dvh px-4 pt-6 pb-10 max-w-lg mx-auto space-y-4">
-      <button onClick={() => navigate('/home')} className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors">
-        ← Dashboard
-      </button>
+    <div className="min-h-dvh px-4 pt-8 pb-32 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Rounds</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Rounds</h1>
         <button
           onClick={() => navigate('/round/setup')}
-          className="bg-accent hover:bg-accent-hover text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+          className="btn-secondary min-h-[44px] px-4 text-sm text-accent bg-accent/10 ring-accent/30 hover:bg-accent/20"
         >
           New Round
         </button>
@@ -56,12 +54,12 @@ const RoundHistory = () => {
           </button>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {rounds.map((r) => (
             <button
               key={r.RoundID}
               onClick={() => navigate(`/rounds/${r.RoundID}`)}
-              className="w-full bg-bg-card border border-border rounded-xl p-4 text-left hover:border-accent/50 transition-colors"
+              className="group w-full card p-4 text-left transition-transform duration-300 ease-spring active:scale-[0.99]"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -76,6 +74,7 @@ const RoundHistory = () => {
                     {r.HolesPlayed} holes · {r.TeePreference}
                   </div>
                 </div>
+                <Icon name="chevronRight" className="w-4 h-4 ml-3 shrink-0 text-text-muted transition-transform duration-300 ease-spring group-hover:translate-x-0.5" />
               </div>
             </button>
           ))}

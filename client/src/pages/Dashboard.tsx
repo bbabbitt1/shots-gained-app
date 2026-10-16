@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPlayerStats } from '../services/api';
+import { getPlayerStats, clearSession } from '../services/api';
 import { getPendingRounds } from '../services/offline';
 import { syncPendingRounds } from '../services/sync';
 import { formatSG } from '@shared/sg-calculator';
@@ -80,44 +80,30 @@ const Dashboard = () => {
   const hasData = stats && stats.rounds > 0;
 
   return (
-    <div className="min-h-dvh px-4 pt-6 pb-24 max-w-lg mx-auto space-y-4">
+    <div className="min-h-dvh px-4 pt-8 pb-32 max-w-lg mx-auto space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between animate-rise">
         <div>
-          <h1 className="text-2xl font-bold">Hey, {player.playerName?.split(' ')[0] || 'Golfer'}</h1>
+          <span className="eyebrow inline-block rounded-full bg-white/[0.04] px-3 py-1 ring-1 ring-white/10">Shots Gained</span>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Hey, {player.playerName?.split(' ')[0] || 'Golfer'}</h1>
           <p className="text-text-muted text-sm">
             {hasData ? `${stats.rounds} round${stats.rounds > 1 ? 's' : ''} tracked` : 'Ready to track your game?'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('/analysis')}
-            className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors"
-          >
-            Analysis
-          </button>
-          <button
-            onClick={() => navigate('/rounds')}
-            className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors"
-          >
-            Rounds
-          </button>
-          <button
-            onClick={() => {
-              localStorage.removeItem('token');
-              localStorage.removeItem('player');
-              navigate('/login');
-            }}
-            className="text-text-muted text-sm py-2 min-h-[44px] hover:text-sg-negative transition-colors"
-          >
-            Logout
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            clearSession();
+            navigate('/login');
+          }}
+          className="btn-ghost -mr-3 hover:!text-sg-negative"
+        >
+          Logout
+        </button>
       </div>
 
       {/* Pending sync banner */}
       {pendingCount > 0 && (
-        <div className="bg-cat-driving/15 border border-cat-driving/30 rounded-xl px-4 py-3 flex items-center justify-between">
+        <div className="bg-cat-driving/15 ring-1 ring-cat-driving/30 rounded-2xl pl-4 pr-1 py-1 flex items-center justify-between">
           <span className="text-cat-driving text-sm font-medium">
             {syncing ? 'Syncing...' : `${pendingCount} round${pendingCount > 1 ? 's' : ''} saved offline`}
           </span>
@@ -129,7 +115,7 @@ const Dashboard = () => {
                 setSyncing(false);
                 loadData();
               }}
-              className="text-cat-driving text-xs font-semibold hover:underline"
+              className="btn-ghost text-cat-driving font-semibold hover:!text-cat-driving"
             >
               Sync now
             </button>
@@ -140,60 +126,60 @@ const Dashboard = () => {
       {loading ? (
         <p className="text-text-secondary text-center py-12">Loading...</p>
       ) : !hasData ? (
-        <div className="text-center py-16 space-y-4">
-          <p className="text-text-secondary text-lg">No rounds logged yet</p>
-          <p className="text-text-muted text-sm">Start tracking to see your stats here</p>
+        <div className="card p-8 text-center space-y-2 animate-rise">
+          <p className="text-text-primary text-lg font-medium">No rounds logged yet</p>
+          <p className="text-text-muted text-sm">Tap Log below to start tracking your first round</p>
         </div>
       ) : (
         <>
-          {/* SG Overview */}
-          <div className="bg-bg-card border border-border rounded-xl p-4">
-            <div className="text-text-secondary text-xs uppercase tracking-wider mb-3">Shots Gained (All Rounds)</div>
-            <div className="grid grid-cols-4 gap-2 mb-3">
+          {/* SG bento: hero + category tiles */}
+          <div className="card p-5 animate-rise [animation-delay:60ms]">
+            <div className="eyebrow">Avg SG / hole · all rounds</div>
+            <div className={`num mt-1 text-5xl font-semibold ${sgColor(stats.avgSGPerHole)}`}>{formatSG(stats.avgSGPerHole)}</div>
+            <div className="mt-5 grid grid-cols-2 gap-2">
               {([
-                { label: 'DRV', val: stats.sgDriving },
-                { label: 'APP', val: stats.sgApproach },
-                { label: 'SG', val: stats.sgShortGame },
-                { label: 'PUT', val: stats.sgPutting },
-              ] as const).map(({ label, val }) => (
-                <div key={label} className="bg-accent/10 rounded-lg p-2 text-center">
-                  <div className="text-xs font-semibold text-accent uppercase tracking-wider">{label}</div>
-                  <div className={`text-sm font-bold ${sgColor(val)}`}>{formatSG(val)}</div>
+                { label: 'Driving', val: stats.sgDriving, dot: 'bg-cat-driving' },
+                { label: 'Approach', val: stats.sgApproach, dot: 'bg-cat-approach' },
+                { label: 'Short Game', val: stats.sgShortGame, dot: 'bg-cat-shortgame' },
+                { label: 'Putting', val: stats.sgPutting, dot: 'bg-cat-putting' },
+              ] as const).map(({ label, val, dot }) => (
+                <div key={label} className="tile p-3">
+                  <div className="flex items-center gap-2 text-xs font-medium text-text-secondary">
+                    <span className={`h-2 w-2 rounded-full ${dot}`} />
+                    {label}
+                  </div>
+                  <div className={`num mt-1 text-xl font-semibold ${sgColor(val)}`}>{formatSG(val)}</div>
                 </div>
               ))}
-            </div>
-            <div className="flex items-center justify-between pt-2 border-t border-border/50">
-              <span className="text-text-muted text-xs">Avg SG / hole</span>
-              <span className={`font-bold ${sgColor(stats.avgSGPerHole)}`}>{formatSG(stats.avgSGPerHole)}</span>
             </div>
           </div>
 
           {/* Key Stats */}
-          <div className="bg-bg-card border border-border rounded-xl p-4">
-            <div className="text-text-secondary text-xs uppercase tracking-wider mb-3">Stats</div>
+          <div className="card p-4 animate-rise [animation-delay:120ms]">
+            <div className="eyebrow mb-3">Stats</div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-bg-surface rounded-lg p-3 text-center">
-                <div className="text-text-muted text-xs uppercase tracking-wider">Scoring Avg</div>
-                <div className="text-xl font-bold text-text-primary">
+              <div className="tile p-3 text-center">
+                <div className="eyebrow">Scoring Avg</div>
+                <div className="num text-2xl font-semibold text-text-primary">
                   {(stats.totalStrokes / stats.rounds).toFixed(1)}
                 </div>
                 <div className="text-text-muted text-xs">{stats.holes} holes</div>
               </div>
-              <div className="bg-bg-surface rounded-lg p-3 text-center">
-                <div className="text-text-muted text-xs uppercase tracking-wider">Avg Putts</div>
-                <div className="text-xl font-bold text-text-primary">
+              <div className="tile p-3 text-center">
+                <div className="eyebrow">Avg Putts</div>
+                <div className="num text-2xl font-semibold text-text-primary">
                   {(stats.totalPutts / stats.rounds).toFixed(1)}
                 </div>
                 <div className="text-text-muted text-xs">per round</div>
               </div>
-              <div className="bg-bg-surface rounded-lg p-3 text-center">
-                <div className="text-text-muted text-xs uppercase tracking-wider">FIR</div>
-                <div className="text-xl font-bold text-text-primary">{pct(stats.firHit, stats.firTotal)}</div>
+              <div className="tile p-3 text-center">
+                <div className="eyebrow">FIR</div>
+                <div className="num text-2xl font-semibold text-text-primary">{pct(stats.firHit, stats.firTotal)}</div>
                 <div className="text-text-muted text-xs">{stats.firHit}/{stats.firTotal}</div>
               </div>
-              <div className="bg-bg-surface rounded-lg p-3 text-center">
-                <div className="text-text-muted text-xs uppercase tracking-wider">GIR</div>
-                <div className="text-xl font-bold text-text-primary">{pct(stats.girHit, stats.holes)}</div>
+              <div className="tile p-3 text-center">
+                <div className="eyebrow">GIR</div>
+                <div className="num text-2xl font-semibold text-text-primary">{pct(stats.girHit, stats.holes)}</div>
                 <div className="text-text-muted text-xs">{stats.girHit}/{stats.holes}</div>
               </div>
             </div>
@@ -201,10 +187,10 @@ const Dashboard = () => {
 
           {/* Recent Rounds */}
           {recent.length > 0 && (
-            <div className="bg-bg-card border border-border rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-text-secondary text-xs uppercase tracking-wider">Recent Rounds</div>
-                <button onClick={() => navigate('/rounds')} className="text-accent text-sm py-1 min-h-[44px] hover:underline">
+            <div className="card p-4 animate-rise [animation-delay:180ms]">
+              <div className="flex items-center justify-between mb-1">
+                <div className="eyebrow">Recent Rounds</div>
+                <button onClick={() => navigate('/rounds')} className="btn-ghost -mr-3 text-accent hover:!text-accent">
                   View all
                 </button>
               </div>
@@ -215,7 +201,7 @@ const Dashboard = () => {
                     <button
                       key={r.RoundID}
                       onClick={() => navigate(`/rounds/${r.RoundID}`)}
-                      className="w-full flex items-center justify-between py-2 border-b border-border/30 last:border-0 hover:bg-bg-surface/50 -mx-1 px-1 rounded transition-colors"
+                      className="flex w-[calc(100%+1rem)] items-center justify-between min-h-[56px] py-2 border-b border-white/5 last:border-0 hover:bg-white/[0.03] -mx-2 px-2 rounded-xl transition-colors duration-200 ease-spring"
                     >
                       <div className="text-left">
                         <div className="text-text-primary text-sm font-medium">{r.ClubName}</div>
@@ -223,12 +209,12 @@ const Dashboard = () => {
                       </div>
                       <div className="text-right flex items-center gap-3">
                         {r.totalScore && (
-                          <span className={`text-sm font-semibold ${scoreColor(stp)}`}>
+                          <span className={`num text-sm font-semibold ${scoreColor(stp)}`}>
                             {stp === 0 ? 'E' : stp > 0 ? `+${stp}` : stp}
                           </span>
                         )}
                         {r.totalSG !== null && (
-                          <span className={`text-sm font-bold ${sgColor(r.totalSG)}`}>
+                          <span className={`num text-sm font-semibold ${sgColor(r.totalSG)}`}>
                             {formatSG(r.totalSG)}
                           </span>
                         )}
@@ -241,18 +227,6 @@ const Dashboard = () => {
           )}
         </>
       )}
-
-      {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-lg mx-auto">
-          <button
-            onClick={() => navigate('/round/setup')}
-            className="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-4 rounded-xl transition-colors text-lg shadow-lg shadow-black/30"
-          >
-            Log Round
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

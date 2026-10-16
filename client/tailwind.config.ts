@@ -14,7 +14,7 @@ const config: Config = {
         text: {
           primary: '#F1F5F9',
           secondary: '#94A3B8',
-          muted: '#64748B',
+          muted: '#8291A7', // ≥4.5:1 on card/surface for outdoor legibility
         },
         accent: {
           DEFAULT: '#3B82F6',
@@ -35,7 +35,17 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Geist', 'system-ui', 'sans-serif'],
+        mono: ['"Geist Mono"', 'ui-monospace', 'monospace'],
+      },
+      transitionTimingFunction: {
+        spring: 'cubic-bezier(0.32, 0.72, 0, 1)',
+      },
+      keyframes: {
+        rise: { from: { opacity: '0', transform: 'translateY(12px)' }, to: { opacity: '1', transform: 'none' } },
+      },
+      animation: {
+        rise: 'rise 600ms cubic-bezier(0.32, 0.72, 0, 1) both',
       },
     },
   },

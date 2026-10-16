@@ -34,11 +34,12 @@ const Login = () => {
   return (
     <div className="min-h-dvh flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-1">Shots Gained Tracker</h1>
-        <p className="text-xl font-semibold text-text-muted text-center mb-1">Track your game</p>
-        <p className="text-lg text-text-primary font-light text-center tracking-wide mb-8">Shot by Shot</p>
+        <div className="text-center mb-8 animate-rise">
+          <span className="eyebrow inline-block rounded-full bg-white/[0.04] px-3 py-1 ring-1 ring-white/10">Track your game · shot by shot</span>
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight">Shots Gained</h1>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="card p-5 space-y-3 animate-rise [animation-delay:80ms]">
           {isRegister && (
             <input
               type="text"
@@ -73,7 +74,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-accent hover:bg-accent-hover disabled:opacity-40 text-white font-semibold py-4 rounded-xl transition-colors text-lg"
+            className="w-full btn-primary"
           >
             {loading ? '...' : isRegister ? 'Create Account' : 'Login'}
           </button>
@@ -81,7 +82,7 @@ const Login = () => {
 
         <button
           onClick={() => { setIsRegister(!isRegister); setError(''); }}
-          className="w-full text-text-secondary text-sm mt-4 py-3 min-h-[44px] hover:text-text-primary transition-colors"
+          className="w-full btn-ghost justify-center mt-4"
         >
           {isRegister ? 'Already have an account? Login' : 'Need an account? Register'}
         </button>

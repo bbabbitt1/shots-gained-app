@@ -134,25 +134,28 @@ const RoundSummary = () => {
 
   return (
     <div className="min-h-dvh px-4 pt-6 pb-10 max-w-lg mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Round Summary</h1>
+      <div>
+        <span className="eyebrow inline-block rounded-full bg-white/[0.04] px-3 py-1 ring-1 ring-white/10">Round complete</span>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Round Summary</h1>
+      </div>
 
       {/* Score */}
-      <div className="bg-bg-card border border-border rounded-xl p-4 text-center">
-        <div className="text-4xl font-bold">{totalStrokes}</div>
+      <div className="card p-5 text-center animate-rise">
+        <div className="num text-5xl font-semibold">{totalStrokes}</div>
         <div className="text-text-secondary text-sm">
           {scoreToPar === 0 ? 'Even' : scoreToPar > 0 ? `+${scoreToPar}` : scoreToPar} ({totalPar} par)
         </div>
       </div>
 
       {/* Total SG */}
-      <div className="bg-bg-card border border-border rounded-xl p-4 text-center">
-        <div className="text-text-secondary text-xs uppercase tracking-wider mb-1">Total Shots Gained</div>
-        <div className={`text-3xl font-bold ${sgColor(totalSG)}`}>{formatSG(totalSG)}</div>
+      <div className="card p-5 text-center animate-rise [animation-delay:80ms]">
+        <div className="eyebrow mb-1">Total Shots Gained</div>
+        <div className={`num text-4xl font-semibold ${sgColor(totalSG)}`}>{formatSG(totalSG)}</div>
       </div>
 
       {/* SG by Category — horizontal bars */}
-      <div className="bg-bg-card border border-border rounded-xl p-4 space-y-3">
-        <div className="text-text-secondary text-xs uppercase tracking-wider">By Category</div>
+      <div className="card p-5 space-y-3 animate-rise [animation-delay:160ms]">
+        <div className="eyebrow">By Category</div>
         {CATEGORIES.map((cat) => {
           const val = sgByCategory[cat];
           const pct = (Math.abs(val) / maxAbs) * 50;
@@ -161,7 +164,7 @@ const RoundSummary = () => {
             <div key={cat}>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-text-primary">{cat}</span>
-                <span className={`font-semibold ${sgColor(val)}`}>{formatSG(val)}</span>
+                <span className={`num font-semibold ${sgColor(val)}`}>{formatSG(val)}</span>
               </div>
               <div className="h-2 bg-bg-surface rounded-full relative">
                 <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
@@ -185,13 +188,13 @@ const RoundSummary = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-semibold py-4 rounded-xl transition-colors text-lg"
+            className="w-full btn-primary"
           >
             {saving ? 'Saving...' : 'Save Round'}
           </button>
           <button
             onClick={() => navigate('/round/play')}
-            className="w-full text-text-secondary hover:text-text-primary py-2 transition-colors"
+            className="w-full btn-secondary"
           >
             Back to Round
           </button>
@@ -203,13 +206,13 @@ const RoundSummary = () => {
           </p>
           <button
             onClick={() => navigate('/home')}
-            className="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-4 rounded-xl transition-colors text-lg"
+            className="w-full btn-primary"
           >
             Dashboard
           </button>
           <button
             onClick={() => navigate('/round/setup')}
-            className="w-full text-text-secondary hover:text-text-primary py-2 transition-colors"
+            className="w-full btn-secondary"
           >
             New Round
           </button>

@@ -158,15 +158,16 @@ const RoundSetup = () => {
   const activeTee = tees.find((t) => t.tee_name === selectedTee);
 
   return (
-    <div className="min-h-dvh px-4 pt-6 pb-10 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Round Setup</h1>
+    <div className="min-h-dvh px-4 pt-8 pb-10 max-w-lg mx-auto">
+      <span className="eyebrow inline-block rounded-full bg-white/[0.04] px-3 py-1 ring-1 ring-white/10">New Round</span>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight mb-6">Round Setup</h1>
 
       <div className="space-y-5">
         {/* Course Search */}
         <div className="relative" ref={dropdownRef}>
-          <label className="text-text-secondary text-xs mb-1 block">Course</label>
+          <label className="eyebrow mb-1.5 block">Course</label>
           {selectedCourse ? (
-            <div className="flex items-center justify-between bg-bg-surface border border-accent/50 rounded-lg px-4 py-3">
+            <div className="flex items-center justify-between bg-accent/10 ring-1 ring-accent/40 rounded-2xl pl-4 pr-1 py-1 min-h-[56px]">
               <div>
                 <div className="text-text-primary font-medium">{selectedCourse.club_name}</div>
                 {selectedCourse.location && (
@@ -175,7 +176,7 @@ const RoundSetup = () => {
                   </div>
                 )}
               </div>
-              <button onClick={clearCourse} className="text-text-muted hover:text-sg-negative text-sm px-2">
+              <button onClick={clearCourse} className="btn-ghost hover:!text-sg-negative">
                 Change
               </button>
             </div>
@@ -203,15 +204,15 @@ const RoundSetup = () => {
 
           {/* Search Results Dropdown */}
           {showDropdown && (cachedResults.length > 0 || searchResults.length > 0) && (
-            <div className="absolute z-20 mt-1 w-full bg-bg-surface border border-border rounded-lg max-h-72 overflow-y-auto shadow-lg shadow-black/30">
+            <div className="absolute z-20 mt-2 w-full bg-bg-surface ring-1 ring-white/10 rounded-2xl max-h-72 overflow-y-auto shadow-[0_24px_48px_-20px_rgba(0,0,0,0.8)]">
               {cachedResults.length > 0 && (
                 <>
-                  <div className="px-4 py-2 text-xs font-semibold text-accent uppercase tracking-wider bg-bg-card border-b border-border/50">Saved Courses</div>
+                  <div className="eyebrow text-accent px-4 py-2 bg-bg-card border-b border-white/5">Saved Courses</div>
                   {cachedResults.map((c) => (
                     <button
                       key={`cache-${c.id}`}
                       onClick={() => selectCourse(c)}
-                      className="w-full text-left px-4 py-3 hover:bg-accent/10 active:bg-accent/20 transition-colors border-b border-border/50"
+                      className="w-full text-left px-4 py-3 hover:bg-accent/10 active:bg-accent/20 transition-colors border-b border-white/5"
                     >
                       <div className="text-text-primary text-sm font-medium">{c.club_name}</div>
                       <div className="text-text-muted text-xs">{c.course_name}</div>
@@ -221,12 +222,12 @@ const RoundSetup = () => {
               )}
               {searchResults.length > 0 && (
                 <>
-                  <div className="px-4 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-bg-card border-b border-border/50">Search Results</div>
+                  <div className="eyebrow px-4 py-2 bg-bg-card border-b border-white/5">Search Results</div>
                   {searchResults.map((c) => (
                     <button
                       key={`api-${c.id}`}
                       onClick={() => selectCourse(c)}
-                      className="w-full text-left px-4 py-3 hover:bg-accent/10 active:bg-accent/20 transition-colors border-b border-border/50 last:border-0"
+                      className="w-full text-left px-4 py-3 hover:bg-accent/10 active:bg-accent/20 transition-colors border-b border-white/5 last:border-0"
                     >
                       <div className="text-text-primary text-sm font-medium">{c.club_name}</div>
                       <div className="text-text-muted text-xs">
@@ -251,22 +252,22 @@ const RoundSetup = () => {
 
         {tees.length > 0 && (
           <div>
-            <label className="text-text-secondary text-xs mb-2 block">Select Tees</label>
+            <label className="eyebrow mb-2 block">Select Tees</label>
             <div className="space-y-2">
               {tees.map((t) => (
                 <button
                   key={t.tee_name}
                   onClick={() => { setSelectedTee(t.tee_name); setCustomYardages(null); }}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
+                  className={`w-full flex items-center justify-between px-5 min-h-[56px] rounded-2xl ring-1 transition-colors duration-200 ease-spring ${
                     selectedTee === t.tee_name && !customYardages
-                      ? 'border-accent bg-accent/10'
-                      : 'border-border hover:border-text-muted'
+                      ? 'ring-accent bg-accent/10'
+                      : 'ring-white/10 hover:ring-white/25'
                   }`}
                 >
                   <span className={`font-medium ${selectedTee === t.tee_name && !customYardages ? 'text-accent' : 'text-text-primary'}`}>
                     {t.tee_name}
                   </span>
-                  <span className="text-text-muted text-sm">
+                  <span className="num text-text-muted text-sm">
                     {t.total_yards.toLocaleString()} yds · Par {t.par_total}
                   </span>
                 </button>
@@ -279,10 +280,10 @@ const RoundSetup = () => {
                     setSelectedTee(base.tee_name);
                   }
                 }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
+                className={`w-full flex items-center justify-between px-5 min-h-[56px] rounded-2xl ring-1 transition-colors duration-200 ease-spring ${
                   customYardages
-                    ? 'border-accent bg-accent/10'
-                    : 'border-border hover:border-text-muted'
+                    ? 'ring-accent bg-accent/10'
+                    : 'ring-white/10 hover:ring-white/25'
                 }`}
               >
                 <span className={`font-medium ${customYardages ? 'text-accent' : 'text-text-primary'}`}>
@@ -296,15 +297,15 @@ const RoundSetup = () => {
 
         {/* Hole-by-hole preview / edit */}
         {activeTee && activeTee.holes.length > 0 && (
-          <div className="bg-bg-card border border-border rounded-xl p-3 overflow-x-auto">
-            <div className="text-text-secondary text-xs font-medium mb-2 uppercase tracking-wider">
+          <div className="card p-4 overflow-x-auto">
+            <div className="eyebrow mb-2">
               {customYardages ? 'Custom' : activeTee.tee_name} Tees — Hole Details
             </div>
             {[0, 9].map((start) => {
               const slice = activeTee.holes.slice(start, start + 9);
               if (slice.length === 0) return null;
               return (
-                <div key={start} className={start > 0 ? 'mt-3 pt-3 border-t border-border/50' : ''}>
+                <div key={start} className={start > 0 ? 'mt-3 pt-3 border-t border-white/5' : ''}>
                   <div className="grid gap-1 text-center text-xs min-w-0" style={{ gridTemplateColumns: `32px repeat(${slice.length}, minmax(28px, 1fr))` }}>
                     <div className="text-text-muted text-left">Hole</div>
                     {slice.map((h) => (
@@ -323,7 +324,7 @@ const RoundSetup = () => {
                               updated[start + i] = Number(e.target.value);
                               setCustomYardages(updated);
                             }}
-                            className="w-full text-center text-xs !px-0 !py-0.5 !rounded-md !border-border/50"
+                            className="w-full text-center text-xs !px-0 !py-0.5 !rounded-md !min-h-[36px]"
                           />
                         ) : (
                           <div className="text-text-primary font-medium">{h.yardage}</div>
@@ -343,16 +344,16 @@ const RoundSetup = () => {
 
         {/* Holes */}
         <div>
-          <label className="text-text-secondary text-xs mb-2 block">Holes</label>
+          <label className="eyebrow mb-2 block">Holes</label>
           <div className="grid grid-cols-3 gap-2">
             {['9', '18', 'other'].map((opt) => (
               <button
                 key={opt}
                 onClick={() => setHolesPlayed(opt === 'other' ? '' : opt)}
-                className={`py-2.5 px-3 rounded-lg text-sm font-medium border transition-colors ${
+                className={`chip ${
                   holesPlayed === opt || (opt === 'other' && !['9', '18'].includes(holesPlayed))
-                    ? 'border-accent bg-accent/10 text-accent'
-                    : 'border-border text-text-secondary hover:border-text-muted'
+                    ? 'ring-accent bg-accent/10 text-accent'
+                    : 'ring-white/10 text-text-secondary hover:ring-white/25'
                 }`}
               >
                 {opt === 'other' ? 'Other' : opt}
@@ -366,7 +367,7 @@ const RoundSetup = () => {
               value={holesPlayed}
               onChange={(e) => setHolesPlayed(e.target.value)}
               placeholder="Number of holes"
-              className="w-full mt-2 text-sm"
+              className="w-full mt-2"
               min={1}
               max={18}
             />
@@ -375,7 +376,7 @@ const RoundSetup = () => {
 
         {/* Date */}
         <div>
-          <label className="text-text-secondary text-xs mb-1 block">Date</label>
+          <label className="eyebrow mb-1.5 block">Date</label>
           <input
             type="date"
             value={roundDate}
@@ -388,7 +389,7 @@ const RoundSetup = () => {
         <button
           onClick={handleStart}
           disabled={!searchQuery || !holesPlayed}
-          className="w-full bg-accent hover:bg-accent-hover disabled:opacity-40 text-white font-semibold py-4 rounded-xl transition-colors text-lg mt-2"
+          className="w-full btn-primary mt-2"
         >
           Start Round
         </button>

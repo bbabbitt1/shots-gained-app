@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getAnalysisShots } from '../services/api';
 import DrivingChart from '../components/analysis/DrivingChart';
 import ApproachChart from '../components/analysis/ApproachChart';
@@ -22,7 +21,6 @@ const TAB_COLORS: Record<Tab, string> = {
 };
 
 const Analysis = () => {
-  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('Driving');
   const [filter, setFilter] = useState('all');
   const [shots, setShots] = useState<Record<string, unknown>[]>([]);
@@ -59,23 +57,15 @@ const Analysis = () => {
   }, [shots]);
 
   return (
-    <div className="min-h-dvh px-4 pt-6 pb-10 max-w-lg mx-auto space-y-4">
+    <div className="min-h-dvh px-4 pt-8 pb-32 max-w-lg mx-auto space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Analysis</h1>
-        <button
-          onClick={() => navigate('/home')}
-          className="text-text-secondary text-sm py-2 min-h-[44px] hover:text-text-primary transition-colors"
-        >
-          Dashboard
-        </button>
-      </div>
+      <h1 className="text-3xl font-semibold tracking-tight">Analysis</h1>
 
       {/* Filter */}
       <select
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        className="w-full bg-bg-card border border-border rounded-xl px-4 py-3 text-text-primary text-sm appearance-none cursor-pointer"
+        className="w-full appearance-none cursor-pointer"
       >
         <option value="all">All Rounds</option>
         <option value="last5">Last 5 Rounds</option>
@@ -88,14 +78,14 @@ const Analysis = () => {
       </select>
 
       {/* Category Tabs */}
-      <div className="flex bg-bg-card border border-border rounded-xl p-1 gap-1">
+      <div className="flex rounded-full bg-bg-surface/70 ring-1 ring-white/10 p-1 gap-1">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-colors ${
+            className={`flex-1 min-h-[44px] text-sm font-semibold rounded-full transition-colors duration-200 ease-spring ${
               tab === t
-                ? `${TAB_COLORS[t]} text-white`
+                ? `${TAB_COLORS[t]} text-bg-primary`
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
@@ -108,12 +98,12 @@ const Analysis = () => {
       {loading ? (
         <p className="text-text-secondary text-center py-12">Loading...</p>
       ) : shots.length === 0 ? (
-        <div className="text-center py-16 space-y-2">
+        <div className="card p-8 text-center space-y-2">
           <p className="text-text-secondary">No data for this filter</p>
           <p className="text-text-muted text-sm">Play some rounds to see your analysis</p>
         </div>
       ) : (
-        <div className="bg-bg-card border border-border rounded-xl p-4">
+        <div className="card p-4">
           {tab === 'Driving' && <DrivingChart shots={shots as never} />}
           {tab === 'Approach' && <ApproachChart shots={shots as never} />}
           {tab === 'Putting' && <PuttingChart shots={shots as never} />}

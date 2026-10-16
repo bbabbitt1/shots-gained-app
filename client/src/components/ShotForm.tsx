@@ -150,10 +150,10 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
     : '';
 
   return (
-    <div className="bg-bg-card border border-border rounded-xl p-4 space-y-4">
+    <div className="card p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-text-primary font-semibold">Shot {shotNumber}</h3>
-        <span className={`px-3 py-1 rounded-lg text-xs font-medium ${
+        <h3 className="text-text-primary text-lg font-semibold tracking-tight">Shot <span className="num">{shotNumber}</span></h3>
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
           category === 'Driving' ? 'bg-cat-driving/20 text-cat-driving' :
           category === 'Approach' ? 'bg-cat-approach/20 text-cat-approach' :
           category === 'Short Game' ? 'bg-cat-shortgame/20 text-cat-shortgame' :
@@ -166,17 +166,17 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
       {/* Start */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-text-secondary text-xs mb-1 block">From</label>
+          <label className="eyebrow mb-1.5 block">From</label>
           <select
             value={surfaceStart}
             onChange={(e) => setSurfaceStart(e.target.value as Surface)}
-            className="w-full text-sm"
+            className="w-full"
           >
             {SURFACES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div>
-          <label className="text-text-secondary text-xs mb-1 block">
+          <label className="eyebrow mb-1.5 block">
             Distance ({surfaceStart === 'Green' ? 'ft' : 'yds'})
           </label>
           <input
@@ -184,7 +184,7 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
             inputMode="numeric"
             value={distanceStart || ''}
             onChange={(e) => setDistanceStart(Number(e.target.value))}
-            className="w-full text-sm"
+            className="w-full"
             placeholder="0"
           />
         </div>
@@ -193,17 +193,17 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
       {/* End */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-text-secondary text-xs mb-1 block">To</label>
+          <label className="eyebrow mb-1.5 block">To</label>
           <select
             value={surfaceEnd}
             onChange={(e) => setSurfaceEnd(e.target.value as EndSurface)}
-            className="w-full text-sm"
+            className="w-full"
           >
             {END_SURFACES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         <div>
-          <label className="text-text-secondary text-xs mb-1 block">
+          <label className="eyebrow mb-1.5 block">
             Distance ({surfaceEnd === 'Green' ? 'ft' : 'yds'})
           </label>
           <input
@@ -236,14 +236,14 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
                   key={opt}
                   type="button"
                   onClick={() => setShotResult(isSelected ? '' : opt)}
-                  className={`py-2.5 rounded-lg text-xs font-medium border transition-colors min-h-[44px] ${
+                  className={`chip rounded-2xl px-1.5 text-xs ${
                     isSelected
                       ? isPositive
-                        ? 'border-sg-positive bg-sg-positive/15 text-sg-positive'
+                        ? 'ring-sg-positive bg-sg-positive/15 text-sg-positive'
                         : isNeutral
-                          ? 'border-accent bg-accent/15 text-accent'
-                          : 'border-sg-negative bg-sg-negative/15 text-sg-negative'
-                      : 'border-border text-text-muted hover:border-text-muted'
+                          ? 'ring-accent bg-accent/15 text-accent'
+                          : 'ring-sg-negative bg-sg-negative/15 text-sg-negative'
+                      : 'ring-white/10 text-text-secondary hover:ring-white/25'
                   }`}
                 >
                   {opt}
@@ -264,21 +264,21 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
       {/* Category override + Club */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-text-secondary text-xs mb-1 block">Category</label>
+          <label className="eyebrow mb-1.5 block">Category</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
-            className="w-full text-sm"
+            className="w-full"
           >
             {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
-          <label className="text-text-secondary text-xs mb-1 block">Club</label>
+          <label className="eyebrow mb-1.5 block">Club</label>
           <select
             value={clubUsed}
             onChange={(e) => setClubUsed(e.target.value)}
-            className="w-full text-sm"
+            className="w-full"
           >
             <option value="">—</option>
             {CLUBS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -287,12 +287,12 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
       </div>
 
       {/* Penalty */}
-      <label className="flex items-center gap-3 cursor-pointer">
+      <label className="tile flex items-center gap-3 cursor-pointer min-h-[48px] px-4">
         <input
           type="checkbox"
           checked={penalty}
           onChange={(e) => setPenalty(e.target.checked)}
-          className="w-5 h-5 rounded border-border accent-sg-negative"
+          className="w-5 h-5 accent-sg-negative"
         />
         <span className="text-text-secondary text-sm">Penalty stroke</span>
       </label>
@@ -300,14 +300,14 @@ const ShotForm = ({ hole, par, shotNumber, benchmarks, previousShot, holeYardage
       {/* SG Preview + Submit */}
       <div className="flex items-center gap-3">
         {sgPreview !== null && (
-          <div className={`flex-1 text-center py-3 rounded-lg font-bold text-lg ${sgColor}`}>
+          <div className={`num flex-1 text-center min-h-[56px] flex items-center justify-center rounded-full font-semibold text-xl ${sgColor}`}>
             {formatSG(sgPreview)}
           </div>
         )}
         <button
           onClick={handleSubmit}
           disabled={!distanceStart || (!distanceEnd && surfaceEnd !== 'Hole')}
-          className="flex-1 bg-accent hover:bg-accent-hover disabled:opacity-40 text-white font-semibold py-4 rounded-xl transition-colors text-lg"
+          className="flex-1 btn-primary"
         >
           Add Shot
         </button>

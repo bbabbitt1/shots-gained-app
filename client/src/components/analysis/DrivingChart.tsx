@@ -37,7 +37,7 @@ const DrivingChart = ({ shots }: { shots: AnalysisShot[] }) => {
 
   return (
     <div className="space-y-3">
-      <div className="text-text-secondary text-xs uppercase tracking-wider">
+      <div className="eyebrow">
         SG by Club · {drivingShots.length} shots
       </div>
       {clubData.map(({ club, sg, count, penalties }) => {
@@ -51,12 +51,12 @@ const DrivingChart = ({ shots }: { shots: AnalysisShot[] }) => {
                 <span className="text-text-primary font-medium">{club}</span>
                 <span className="text-text-muted text-xs">({count})</span>
                 {penalties > 0 && (
-                  <span className="text-sg-negative text-xs font-semibold bg-sg-negative/15 px-1.5 py-0.5 rounded">
+                  <span className="text-sg-negative text-xs font-semibold bg-sg-negative/15 px-2 py-0.5 rounded-full">
                     {penalties} pen
                   </span>
                 )}
               </div>
-              <span className={`font-semibold tabular-nums ${textColor}`}>{formatSG(sg)}</span>
+              <span className={`font-semibold num ${textColor}`}>{formatSG(sg)}</span>
             </div>
             <div className="h-3 bg-bg-surface rounded-full relative">
               <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />

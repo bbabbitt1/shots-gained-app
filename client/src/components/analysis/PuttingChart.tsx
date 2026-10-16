@@ -55,17 +55,17 @@ const PuttingChart = ({ shots }: { shots: AnalysisShot[] }) => {
     <div className="space-y-3">
       {/* Toggle */}
       <div className="flex items-center justify-between">
-        <div className="text-text-secondary text-xs uppercase tracking-wider">
+        <div className="eyebrow">
           {puttingShots.length} putts
         </div>
-        <div className="flex bg-bg-surface rounded-lg p-0.5 gap-0.5">
+        <div className="flex rounded-full bg-bg-surface/70 ring-1 ring-white/10 p-0.5 gap-0.5">
           {([['sg', 'SG'], ['makeRate', 'Make %']] as const).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setView(key)}
-              className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+              className={`px-3 min-h-[44px] text-xs font-semibold rounded-full transition-colors duration-200 ease-spring ${
                 view === key
-                  ? 'bg-accent text-white'
+                  ? 'bg-accent-hover text-white'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
@@ -88,7 +88,7 @@ const PuttingChart = ({ shots }: { shots: AnalysisShot[] }) => {
                   <span className="text-text-primary font-medium w-14">{bin.label} ft</span>
                   <span className="text-text-muted text-xs">({bin.count})</span>
                 </div>
-                <span className={`font-semibold tabular-nums ${textColor}`}>{formatSG(bin.sg)}</span>
+                <span className={`font-semibold num ${textColor}`}>{formatSG(bin.sg)}</span>
               </div>
               <div className="h-3 bg-bg-surface rounded-full relative">
                 <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
@@ -113,7 +113,7 @@ const PuttingChart = ({ shots }: { shots: AnalysisShot[] }) => {
                 <span className="text-text-primary font-medium w-14">{bin.label} ft</span>
                 <span className="text-text-muted text-xs">({bin.count})</span>
               </div>
-              <span className="text-text-primary font-semibold tabular-nums">
+              <span className="text-text-primary font-semibold num">
                 {bin.makes}/{bin.count} · {bin.makePct}%
               </span>
             </div>

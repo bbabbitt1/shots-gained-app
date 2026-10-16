@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Icon from './Icons';
 import type { Category, ShotDetails } from '@shared/types';
 import {
   WIND_DIRECTIONS, WIND_STRENGTHS, LIE_QUALITIES,
@@ -62,10 +63,10 @@ const PillSelect = ({ options, value, onChange }: { options: readonly string[]; 
         key={opt}
         type="button"
         onClick={() => onChange(value === opt ? undefined : opt)}
-        className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors min-h-[44px] ${
+        className={`chip px-3.5 text-xs ${
           value === opt
-            ? 'border-accent bg-accent/15 text-accent'
-            : 'border-border text-text-muted hover:border-text-muted'
+            ? 'ring-accent bg-accent/15 text-accent'
+            : 'ring-white/10 text-text-secondary hover:ring-white/25'
         }`}
       >
         {opt}
@@ -90,10 +91,10 @@ const PillMultiSelect = ({ options, value, onChange }: { options: readonly strin
                 : [...selected, opt];
               onChange(next.length > 0 ? next : undefined);
             }}
-            className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors min-h-[44px] ${
+            className={`chip px-3.5 text-xs ${
               isSelected
-                ? 'border-accent bg-accent/15 text-accent'
-                : 'border-border text-text-muted hover:border-text-muted'
+                ? 'ring-accent bg-accent/15 text-accent'
+                : 'ring-white/10 text-text-secondary hover:ring-white/25'
             }`}
           >
             {opt}
@@ -119,24 +120,24 @@ const ShotDetailsPanel = ({ category, details, onChange }: ShotDetailsPanelProps
   };
 
   return (
-    <div className="bg-bg-surface border border-border/50 rounded-lg overflow-hidden">
+    <div className="tile overflow-hidden">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-3 min-h-[44px] hover:bg-bg-card/50 transition-colors"
+        className="w-full flex items-center justify-between px-4 min-h-[48px] hover:bg-white/[0.03] transition-colors duration-200 ease-spring"
       >
         <span className="text-text-secondary text-xs font-medium">
           Details
           {filled > 0 && <span className="text-accent ml-1.5">({filled})</span>}
         </span>
-        <span className="text-text-muted text-xs">{expanded ? '▲' : '▼'}</span>
+        <Icon name="chevronRight" className={`w-4 h-4 text-text-muted transition-transform duration-300 ease-spring ${expanded ? '-rotate-90' : 'rotate-90'}`} />
       </button>
 
       {expanded && (
-        <div className="px-3 pb-3 space-y-3 border-t border-border/30">
+        <div className="px-4 pb-4 space-y-3 border-t border-white/5">
           {fields.map((field) => (
             <div key={field.key} className="pt-2">
-              <label className="text-text-secondary text-xs uppercase tracking-wider mb-1 block">
+              <label className="eyebrow mb-1 block">
                 {field.label}
               </label>
               {field.multi ? (

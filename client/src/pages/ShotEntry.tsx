@@ -6,6 +6,7 @@ import { getBenchmarks } from '../services/api';
 import { cacheBenchmarks, getCachedBenchmarks } from '../services/offline';
 import { useRound } from '../hooks/useRound';
 import { formatSG } from '@shared/sg-calculator';
+import Icon from '../components/Icons';
 import type { Shot, BenchmarkRow } from '@shared/types';
 
 const ShotEntry = () => {
@@ -141,10 +142,10 @@ const ShotEntry = () => {
       <SGTracker sgByCategory={round.sgByCategory} totalSG={round.totalSG} shots={round.state.shots} />
 
       {/* Score + Hole Navigation */}
-      <div className="bg-bg-card border border-border rounded-xl p-3 space-y-2">
+      <div className="card p-4 space-y-2">
         {/* Live Score */}
         <div className="flex items-center justify-center gap-3">
-          <span className={`text-2xl font-bold ${scoreColor}`}>{scoreDisplay}</span>
+          <span className={`num text-3xl font-semibold ${scoreColor}`}>{scoreDisplay}</span>
           {liveScore.holesCompleted > 0 && (
             <span className="text-text-secondary text-xs">
               {liveScore.totalStrokes} strokes · {liveScore.holesCompleted} holes
@@ -156,12 +157,13 @@ const ShotEntry = () => {
           <button
             onClick={handlePrevHole}
             disabled={round.state.currentHole <= 1}
-            className="text-text-secondary hover:text-text-primary disabled:opacity-30 px-3 py-2.5 min-h-[44px] text-lg font-bold"
+            aria-label="Previous hole"
+            className="btn-secondary w-12 px-0 disabled:opacity-30"
           >
-            &larr;
+            <Icon name="chevronLeft" />
           </button>
           <div className="text-center">
-            <div className="text-xl font-bold">Hole {round.state.currentHole}</div>
+            <div className="text-2xl font-semibold tracking-tight">Hole {round.state.currentHole}</div>
             <div className="text-text-secondary text-xs">
               Par {currentHoleInfo.par}
               {currentHoleInfo.yardage > 0 && ` · ${currentHoleInfo.yardage} yds`}
@@ -170,28 +172,29 @@ const ShotEntry = () => {
           <button
             onClick={handleNextHole}
             disabled={round.state.currentHole >= round.state.holesPlayed}
-            className="text-text-secondary hover:text-text-primary disabled:opacity-30 px-3 py-2.5 min-h-[44px] text-lg font-bold"
+            aria-label="Next hole"
+            className="btn-secondary w-12 px-0 disabled:opacity-30"
           >
-            &rarr;
+            <Icon name="chevronRight" />
           </button>
         </div>
       </div>
 
       {/* Shots on this hole */}
       {currentHoleShots.length > 0 && (
-        <div className="bg-bg-card border border-border rounded-xl p-3">
-          <div className="text-text-secondary text-xs font-medium mb-2 uppercase tracking-wider">
+        <div className="card p-4">
+          <div className="eyebrow mb-2">
             Shots this hole
           </div>
           {currentHoleShots.map((shot, i) => (
-            <div key={i} className="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0">
-              <div className="text-sm">
+            <div key={i} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+              <div className="num text-sm">
                 <span className="text-text-muted">#{i + 1}</span>{' '}
                 <span className="text-text-primary">{shot.surfaceStart} {shot.distanceStart}</span>
                 <span className="text-text-muted"> → </span>
                 <span className="text-text-primary">{shot.surfaceEnd} {shot.surfaceEnd !== 'Hole' ? shot.distanceEnd : ''}</span>
               </div>
-              <span className={`text-sm font-semibold ${
+              <span className={`num text-sm font-semibold ${
                 shot.strokesGained > 0 ? 'text-sg-positive' : shot.strokesGained < 0 ? 'text-sg-negative' : 'text-sg-neutral'
               }`}>
                 {formatSG(shot.strokesGained)}
@@ -200,7 +203,7 @@ const ShotEntry = () => {
           ))}
           <button
             onClick={round.removeLastShot}
-            className="text-sg-negative text-sm mt-2 py-2 min-h-[44px] hover:underline"
+            className="btn-ghost -ml-3 mt-1 text-sg-negative hover:!text-sg-negative"
           >
             Undo last shot
           </button>
@@ -209,8 +212,8 @@ const ShotEntry = () => {
 
       {/* Shot Form or Hole Complete */}
       {previousShot?.surfaceEnd === 'Hole' ? (
-        <div className="bg-bg-card border border-border rounded-xl p-5 text-center space-y-3">
-          <div className="text-text-primary font-bold text-lg">
+        <div className="card p-5 text-center space-y-3">
+          <div className="text-text-primary font-semibold text-lg">
             Hole {round.state.currentHole} Complete
           </div>
           {(() => {
@@ -233,14 +236,15 @@ const ShotEntry = () => {
           {round.state.currentHole < round.state.holesPlayed ? (
             <button
               onClick={handleNextHole}
-              className="w-full bg-accent hover:bg-accent-hover text-white font-semibold py-4 rounded-xl transition-colors text-lg"
+              className="group w-full btn-primary"
             >
-              Next Hole →
+              Next Hole
+              <span className="btn-icon"><Icon name="arrowRight" className="w-4 h-4" /></span>
             </button>
           ) : (
             <button
               onClick={handleFinish}
-              className="w-full bg-sg-positive hover:bg-sg-positive/90 text-bg-primary font-semibold py-4 rounded-xl transition-colors text-lg"
+              className="w-full btn-primary bg-sg-positive text-bg-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_10px_28px_-12px_rgba(34,197,94,0.7)]"
             >
               Finish Round
             </button>
@@ -263,7 +267,7 @@ const ShotEntry = () => {
       {round.state.shots.length > 0 && !(previousShot?.surfaceEnd === 'Hole' && round.state.currentHole >= round.state.holesPlayed) && (
         <button
           onClick={handleFinish}
-          className="w-full bg-sg-positive/20 text-sg-positive font-semibold py-4 rounded-xl hover:bg-sg-positive/30 transition-colors"
+          className="w-full btn-secondary min-h-[56px] bg-sg-positive/10 text-sg-positive ring-sg-positive/30 hover:bg-sg-positive/20 font-semibold"
         >
           Finish Round ({round.state.shots.length} shots)
         </button>

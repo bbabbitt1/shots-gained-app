@@ -15,10 +15,10 @@ interface SGTrackerProps {
 }
 
 const categoryConfig = [
-  { key: 'Driving' as const, label: 'DRV' },
-  { key: 'Approach' as const, label: 'APP' },
-  { key: 'Short Game' as const, label: 'SG' },
-  { key: 'Putting' as const, label: 'PUT' },
+  { key: 'Driving' as const, label: 'DRV', color: 'text-cat-driving' },
+  { key: 'Approach' as const, label: 'APP', color: 'text-cat-approach' },
+  { key: 'Short Game' as const, label: 'SG', color: 'text-cat-shortgame' },
+  { key: 'Putting' as const, label: 'PUT', color: 'text-cat-putting' },
 ] as const;
 
 const computeStats = (shots: Shot[]): RoundStats => {
@@ -104,19 +104,19 @@ const SGTracker = ({ sgByCategory, totalSG, shots }: SGTrackerProps) => {
   const stats = computeStats(shots);
 
   return (
-    <div className="bg-bg-card border border-border rounded-xl p-3 space-y-2">
+    <div className="card p-4 space-y-2">
       {/* SG Header */}
       <div className="flex items-center justify-between">
-        <span className="text-text-secondary text-xs font-medium uppercase tracking-wider">Shots Gained</span>
-        <span className={`text-lg font-bold ${sgColor(totalSG)}`}>{formatSG(totalSG)}</span>
+        <span className="eyebrow">Shots Gained</span>
+        <span className={`num text-2xl font-semibold ${sgColor(totalSG)}`}>{formatSG(totalSG)}</span>
       </div>
 
       {/* SG by Category */}
       <div className="grid grid-cols-4 gap-2">
-        {categoryConfig.map(({ key, label }) => (
-          <div key={key} className="bg-accent/10 rounded-lg p-2 text-center">
-            <div className="text-xs font-semibold text-accent uppercase tracking-wider">{label}</div>
-            <div className={`text-sm font-bold ${sgColor(sgByCategory[key])}`}>
+        {categoryConfig.map(({ key, label, color }) => (
+          <div key={key} className="tile p-2 text-center">
+            <div className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${color}`}>{label}</div>
+            <div className={`num text-base font-semibold ${sgColor(sgByCategory[key])}`}>
               {formatSG(sgByCategory[key])}
             </div>
           </div>
@@ -124,28 +124,28 @@ const SGTracker = ({ sgByCategory, totalSG, shots }: SGTrackerProps) => {
       </div>
 
       {/* Round Stats */}
-      <div className="grid grid-cols-4 gap-2 pt-1 border-t border-border/50">
+      <div className="grid grid-cols-4 gap-2 pt-2 border-t border-white/5">
         <div className="text-center">
-          <div className="text-xs text-text-secondary uppercase tracking-wider">FIR</div>
-          <div className="text-sm font-semibold text-text-primary">
+          <div className="eyebrow">FIR</div>
+          <div className="num text-sm font-semibold text-text-primary">
             {stats.fairways.total > 0 ? `${stats.fairways.hit}/${stats.fairways.total}` : '—'}
           </div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-text-secondary uppercase tracking-wider">GIR</div>
-          <div className="text-sm font-semibold text-text-primary">
+          <div className="eyebrow">GIR</div>
+          <div className="num text-sm font-semibold text-text-primary">
             {stats.greens.total > 0 ? `${stats.greens.hit}/${stats.greens.total}` : '—'}
           </div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-text-secondary uppercase tracking-wider">↑/↓</div>
-          <div className="text-sm font-semibold text-text-primary">
+          <div className="eyebrow">↑/↓</div>
+          <div className="num text-sm font-semibold text-text-primary">
             {stats.upAndDowns.total > 0 ? `${stats.upAndDowns.converted}/${stats.upAndDowns.total}` : '—'}
           </div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-text-secondary uppercase tracking-wider">Putts</div>
-          <div className="text-sm font-semibold text-text-primary">
+          <div className="eyebrow">Putts</div>
+          <div className="num text-sm font-semibold text-text-primary">
             {stats.putts > 0 ? stats.putts : '—'}
           </div>
         </div>

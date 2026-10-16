@@ -115,7 +115,7 @@ const ApproachChart = ({ shots }: { shots: AnalysisShot[] }) => {
                 <span className="text-text-primary font-medium w-16">{bin.label}</span>
                 <span className="text-text-muted text-xs">({bin.count})</span>
               </div>
-              <span className={`font-semibold tabular-nums ${textColor}`}>{formatSG(bin.sg)}</span>
+              <span className={`font-semibold num ${textColor}`}>{formatSG(bin.sg)}</span>
             </div>
             <div className="h-3 bg-bg-surface rounded-full relative">
               <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
@@ -143,7 +143,7 @@ const ApproachChart = ({ shots }: { shots: AnalysisShot[] }) => {
                 <span className="text-text-primary font-medium w-16">{bin.label}</span>
                 <span className="text-text-muted text-xs">({bin.count})</span>
               </div>
-              <span className="text-text-primary font-semibold tabular-nums">{bin.avgProx.toFixed(1)} ft</span>
+              <span className="text-text-primary font-semibold num">{bin.avgProx.toFixed(1)} ft</span>
             </div>
             <div className="h-3 bg-bg-surface rounded-full relative">
               <div
@@ -168,7 +168,7 @@ const ApproachChart = ({ shots }: { shots: AnalysisShot[] }) => {
               <span className="text-text-primary font-medium w-16">{bin.label}</span>
               <span className="text-text-muted text-xs">({bin.count})</span>
             </div>
-            <span className="text-text-primary font-semibold tabular-nums">
+            <span className="text-text-primary font-semibold num">
               {bin.girHit}/{bin.girAttempts} · {Math.round(girPct)}%
             </span>
           </div>
@@ -185,7 +185,7 @@ const ApproachChart = ({ shots }: { shots: AnalysisShot[] }) => {
   };
 
   const renderShotTable = () => (
-    <div className="mt-2 mb-1 overflow-x-auto rounded-lg border border-border">
+    <div className="mt-2 mb-1 overflow-x-auto rounded-2xl ring-1 ring-white/10">
       <table className="w-full text-xs">
         <thead>
           <tr className="bg-bg-surface text-text-secondary">
@@ -202,18 +202,18 @@ const ApproachChart = ({ shots }: { shots: AnalysisShot[] }) => {
           {binShots.map((s, i) => {
             const sgColor = s.sg > 0 ? 'text-sg-positive' : s.sg < 0 ? 'text-sg-negative' : 'text-sg-neutral';
             return (
-              <tr key={i} className="border-t border-border/50">
+              <tr key={i} className="border-t border-white/5">
                 <td className="px-2 py-1.5 text-text-primary truncate max-w-[100px]" title={s.course}>
                   {s.course}
                 </td>
                 <td className="px-2 py-1.5 text-text-secondary">{s.hole}</td>
-                <td className="px-2 py-1.5 text-text-primary tabular-nums">{s.yardage}</td>
+                <td className="px-2 py-1.5 text-text-primary num">{s.yardage}</td>
                 <td className="px-2 py-1.5 text-text-secondary">{s.surfaceStart}</td>
                 <td className="px-2 py-1.5 text-text-secondary">{s.surfaceEnd}</td>
-                <td className="px-2 py-1.5 text-right text-text-primary tabular-nums">
+                <td className="px-2 py-1.5 text-right text-text-primary num">
                   {s.surfaceEnd === 'Hole' ? '🕳️' : `${s.proximity.toFixed(1)} ft`}
                 </td>
-                <td className={`px-2 py-1.5 text-right font-semibold tabular-nums ${sgColor}`}>
+                <td className={`px-2 py-1.5 text-right font-semibold num ${sgColor}`}>
                   {formatSG(s.sg)}
                 </td>
               </tr>
@@ -228,17 +228,17 @@ const ApproachChart = ({ shots }: { shots: AnalysisShot[] }) => {
     <div className="space-y-3">
       {/* Toggle */}
       <div className="flex items-center justify-between">
-        <div className="text-text-secondary text-xs uppercase tracking-wider">
+        <div className="eyebrow">
           {approachShots.length} shots
         </div>
-        <div className="flex bg-bg-surface rounded-lg p-0.5 gap-0.5">
+        <div className="flex rounded-full bg-bg-surface/70 ring-1 ring-white/10 p-0.5 gap-0.5">
           {([['sg', 'SG'], ['proximity', 'Prox'], ['gir', 'GIR']] as const).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setView(key)}
-              className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+              className={`px-3 min-h-[44px] text-xs font-semibold rounded-full transition-colors duration-200 ease-spring ${
                 view === key
-                  ? 'bg-accent text-white'
+                  ? 'bg-accent-hover text-white'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
