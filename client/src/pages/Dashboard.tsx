@@ -91,8 +91,8 @@ const Dashboard = () => {
           </p>
         </div>
         <button
-          onClick={() => {
-            clearSession();
+          onClick={async () => {
+            await clearSession();
             navigate('/login');
           }}
           className="btn-ghost -mr-3 hover:!text-sg-negative"
